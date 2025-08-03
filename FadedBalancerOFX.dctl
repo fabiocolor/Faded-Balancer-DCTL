@@ -1,4 +1,4 @@
-// FadedBalancerOFX.dctl v1.0.0
+// FadedBalancerOFX.dctl v1.1.0
 // --------------------------------------------------------------
 // DaVinci Resolve DCTL OFX plugin for balancing RGB channels in
 // faded or color-imbalanced film scans. Provides accessible and 
@@ -13,6 +13,9 @@
 // =============================
 //         UI PARAMETERS
 // =============================
+
+// --------- Section: Film Fade Correction ---------
+DEFINE_UI_PARAMS(fadeCorrection, Fade Correction, DCTLUI_SLIDER_FLOAT, 0.0, 0.0, 1.0, 0.001)
 
 // --------- Channel Balance ---------
 // Controls for adjusting the balance of each color channel.
@@ -92,7 +95,7 @@ __DEVICE__ float clamp01(float x) {
 
 // Safe power function for gamma correction, avoids NaNs for low values.
 __DEVICE__ float safe_pow(float x, float y) {
-    return _powf(_fmaxf(x, 1e-6f), y);
+    return _powf(_fmaxf(x, 1e-9f), y);
 }
 
 // LGGO (Lift, Gamma, Gain/Highlights, Offset) processing for each channel.
@@ -100,17 +103,46 @@ __DEVICE__ float safe_pow(float x, float y) {
 __DEVICE__ float3 applyLGGO(float3 col, float3 shadows, float3 midtones, float3 highlights) {
     col += shadows;
 
-    col.x = safe_pow(clamp01(col.x), 1.0f / midtones.x);
-    col.y = safe_pow(clamp01(col.y), 1.0f / midtones.y);
-    col.z = safe_pow(clamp01(col.z), 1.0f / midtones.z);
+    col.x = safe_pow(col.x, 1.0f / midtones.x);
+    col.y = safe_pow(col.y, 1.0f / midtones.y);
+    col.z = safe_pow(col.z, 1.0f / midtones.z);
 
     col = col * highlights;
 
-    return make_float3(
-        clamp01(col.x),
-        clamp01(col.y),
-        clamp01(col.z)
-    );
+    return col;
+}
+
+// Applies an adaptive saturation and contrast enhancement to correct faded footage.
+__DEVICE__ float3 applyFadeCorrection(float3 col, float fadeCorrection) {
+    if (fadeCorrection > 0.0f) {
+        float luma = col.x * 0.2126f + col.y * 0.7152f + col.z * 0.0722f;
+
+        // --- Contrast Enhancement ---
+        // Apply a gentle S-curve for contrast
+        float contrastedLuma = luma * luma * (3.0f - 2.0f * luma);
+        
+        // Mix between original luma and contrasted luma
+        float finalLuma = _mix(luma, contrastedLuma, fadeCorrection);
+
+        // --- Adaptive Saturation ---
+        float3 lumaColor = make_float3(luma, luma, luma);
+        // The amount of saturation to add
+        float satAmount = 1.0f + fadeCorrection;
+        
+        // Mix between grayscale and original color to control saturation
+        float3 saturatedCol = _mix(lumaColor, col, satAmount);
+
+        // --- Combine and apply ---
+        // First, apply saturation
+        col = _mix(col, saturatedCol, fadeCorrection);
+        
+        // Then, apply contrast, preserving hue
+        float newLuma = col.x * 0.2126f + col.y * 0.7152f + col.z * 0.0722f;
+        if (newLuma > 1e-9f) {
+            col *= finalLuma / newLuma;
+        }
+    }
+    return col;
 }
 
 
@@ -124,11 +156,14 @@ __DEVICE__ float4 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
 {
     float3 rgb = make_float3(p_R, p_G, p_B);
 
+    // --- Film Fade Correction ---
+    rgb = applyFadeCorrection(rgb, fadeCorrection);
+
     // --- Global Channel Balance (Lift/Gamma/Gain) ---
     rgb += globalShadows;
-    rgb.x = safe_pow(clamp01(rgb.x), 1.0f / globalMidtones);
-    rgb.y = safe_pow(clamp01(rgb.y), 1.0f / globalMidtones);
-    rgb.z = safe_pow(clamp01(rgb.z), 1.0f / globalMidtones);
+    rgb.x = safe_pow(rgb.x, 1.0f / globalMidtones);
+    rgb.y = safe_pow(rgb.y, 1.0f / globalMidtones);
+    rgb.z = safe_pow(rgb.z, 1.0f / globalMidtones);
     rgb *= globalHighlights;
 
     // --- Per-Channel Balance ---
@@ -179,5 +214,9 @@ __DEVICE__ float4 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
         if (enableMaxBlueGreen > 0.5f)  rgb.z = _fmaxf(rgb.z, rgb.y); // Blue = max(B, G)
     }
 
-    return make_float4(rgb, p_A);
+    rgb.x = clamp01(rgb.x);
+    rgb.y = clamp01(rgb.y);
+    rgb.z = clamp01(rgb.z);
+
+    return make_float4(rgb.x, rgb.y, rgb.z, p_A);
 }
