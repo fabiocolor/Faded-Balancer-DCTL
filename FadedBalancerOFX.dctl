@@ -1,82 +1,102 @@
-// FadedBalancerOFX.dctl
-// Resolve DCTL OFX plugin for RGB balancing of faded film
+// FadedBalancerOFX.dctl v1.0.0
+// --------------------------------------------------------------
+// DaVinci Resolve DCTL OFX plugin for balancing RGB channels in
+// faded or color-imbalanced film scans. Provides accessible and 
+// flexible tools for channel adjustment, mixing, copy, and removal.
+// Developed by Fabio Bedoya. Licensed under MIT.
+//
+// Contributors: Please keep comments clear and sections organized
+// for ease of collaboration and user accessibility.
+// --------------------------------------------------------------
+
 
 // =============================
-//       UI Parameters
+//         UI PARAMETERS
 // =============================
 
-// Global Balance
-DEFINE_UI_PARAMS(globalShadows,   Global Shadows,   DCTLUI_SLIDER_FLOAT, 0.0, -0.5, 0.5, 0.001)
-DEFINE_UI_PARAMS(globalMidtones,  Global Midtones,  DCTLUI_SLIDER_FLOAT, 1.0,  0.1, 3.0, 0.001)
-DEFINE_UI_PARAMS(globalHighlights, Global Highlights, DCTLUI_SLIDER_FLOAT, 1.0,  0.1, 3.0, 0.001)
+// --------- Channel Balance ---------
+// Controls for adjusting the balance of each color channel.
+// "Shadows" (lift), "Midtones" (gamma), and "Highlights" (gain) for each channel.
 
-// Channel Mixing
+DEFINE_UI_PARAMS(globalShadows,      Global Shadows,     DCTLUI_SLIDER_FLOAT, 0.0, -0.5, 0.5, 0.001)
+DEFINE_UI_PARAMS(globalMidtones,     Global Midtones,    DCTLUI_SLIDER_FLOAT, 1.0,  0.1, 3.0, 0.001)
+DEFINE_UI_PARAMS(globalHighlights,   Global Highlights,  DCTLUI_SLIDER_FLOAT, 1.0,  0.1, 3.0, 0.001)
+
+// --------- Section: Channel Mixing ---------
+// Logical toggle for user interface grouping.
 DEFINE_UI_PARAMS(channelMixingSection, -- CHANNEL MIXING --, DCTLUI_CHECK_BOX, 0)
 
 // Red Channel Mixing
-DEFINE_UI_PARAMS(enableMinRedGreen,   Red: Darken with Green,   DCTLUI_CHECK_BOX, 0)
-DEFINE_UI_PARAMS(enableMinRedBlue,    Red: Darken with Blue,    DCTLUI_CHECK_BOX, 0)
+DEFINE_UI_PARAMS(enableMinRedGreen,   Red: Darken with Green,    DCTLUI_CHECK_BOX, 0)
+DEFINE_UI_PARAMS(enableMinRedBlue,    Red: Darken with Blue,     DCTLUI_CHECK_BOX, 0)
 DEFINE_UI_PARAMS(enableMaxRedGreen,   Red: Lighten with Green,   DCTLUI_CHECK_BOX, 0)
 DEFINE_UI_PARAMS(enableMaxRedBlue,    Red: Lighten with Blue,    DCTLUI_CHECK_BOX, 0)
 
 // Green Channel Mixing
-DEFINE_UI_PARAMS(enableMinGreenRed,   Green: Darken with Red,   DCTLUI_CHECK_BOX, 0)
-DEFINE_UI_PARAMS(enableMinGreenBlue,  Green: Darken with Blue,  DCTLUI_CHECK_BOX, 0)
+DEFINE_UI_PARAMS(enableMinGreenRed,   Green: Darken with Red,    DCTLUI_CHECK_BOX, 0)
+DEFINE_UI_PARAMS(enableMinGreenBlue,  Green: Darken with Blue,   DCTLUI_CHECK_BOX, 0)
 DEFINE_UI_PARAMS(enableMaxGreenRed,   Green: Lighten with Red,   DCTLUI_CHECK_BOX, 0)
 DEFINE_UI_PARAMS(enableMaxGreenBlue,  Green: Lighten with Blue,  DCTLUI_CHECK_BOX, 0)
 
 // Blue Channel Mixing
-DEFINE_UI_PARAMS(enableMinBlueRed,    Blue: Darken with Red,    DCTLUI_CHECK_BOX, 0)
-DEFINE_UI_PARAMS(enableMinBlueGreen,  Blue: Darken with Green,  DCTLUI_CHECK_BOX, 0)
-DEFINE_UI_PARAMS(enableMaxBlueRed,    Blue: Lighten with Red,   DCTLUI_CHECK_BOX, 0)
+DEFINE_UI_PARAMS(enableMinBlueRed,    Blue: Darken with Red,     DCTLUI_CHECK_BOX, 0)
+DEFINE_UI_PARAMS(enableMinBlueGreen,  Blue: Darken with Green,   DCTLUI_CHECK_BOX, 0)
+DEFINE_UI_PARAMS(enableMaxBlueRed,    Blue: Lighten with Red,    DCTLUI_CHECK_BOX, 0)
 DEFINE_UI_PARAMS(enableMaxBlueGreen,  Blue: Lighten with Green,  DCTLUI_CHECK_BOX, 0)
 
-// Channel Balance
-DEFINE_UI_PARAMS(redShadows,   Red Shadows,     DCTLUI_SLIDER_FLOAT, 0.0, -0.5, 0.5, 0.001)
-DEFINE_UI_PARAMS(redMidtones,  Red Midtones,    DCTLUI_SLIDER_FLOAT, 1.0,  0.1, 3.0, 0.001)
+// Channel Balance controls for each color channel
+DEFINE_UI_PARAMS(redShadows,      Red Shadows,        DCTLUI_SLIDER_FLOAT, 0.0, -0.5, 0.5, 0.001)
+DEFINE_UI_PARAMS(redMidtones,     Red Midtones,       DCTLUI_SLIDER_FLOAT, 1.0,  0.1, 3.0, 0.001)
 DEFINE_UI_PARAMS(redHighlights,   Red Highlights,     DCTLUI_SLIDER_FLOAT, 1.0,  0.1, 3.0, 0.001)
 
-DEFINE_UI_PARAMS(greenShadows,   Green Shadows,   DCTLUI_SLIDER_FLOAT, 0.0, -0.5, 0.5, 0.001)
-DEFINE_UI_PARAMS(greenMidtones,  Green Midtones,  DCTLUI_SLIDER_FLOAT, 1.0,  0.1, 3.0, 0.001)
-DEFINE_UI_PARAMS(greenHighlights,   Green Highlights,   DCTLUI_SLIDER_FLOAT, 1.0,  0.1, 3.0, 0.001)
+DEFINE_UI_PARAMS(greenShadows,    Green Shadows,      DCTLUI_SLIDER_FLOAT, 0.0, -0.5, 0.5, 0.001)
+DEFINE_UI_PARAMS(greenMidtones,   Green Midtones,     DCTLUI_SLIDER_FLOAT, 1.0,  0.1, 3.0, 0.001)
+DEFINE_UI_PARAMS(greenHighlights, Green Highlights,   DCTLUI_SLIDER_FLOAT, 1.0,  0.1, 3.0, 0.001)
 
-DEFINE_UI_PARAMS(blueShadows,   Blue Shadows,    DCTLUI_SLIDER_FLOAT, 0.0, -0.5, 0.5, 0.001)
-DEFINE_UI_PARAMS(blueMidtones,  Blue Midtones,   DCTLUI_SLIDER_FLOAT, 1.0,  0.1, 3.0, 0.001)
-DEFINE_UI_PARAMS(blueHighlights,   Blue Highlights,    DCTLUI_SLIDER_FLOAT, 1.0,  0.1, 3.0, 0.001)
+DEFINE_UI_PARAMS(blueShadows,     Blue Shadows,       DCTLUI_SLIDER_FLOAT, 0.0, -0.5, 0.5, 0.001)
+DEFINE_UI_PARAMS(blueMidtones,    Blue Midtones,      DCTLUI_SLIDER_FLOAT, 1.0,  0.1, 3.0, 0.001)
+DEFINE_UI_PARAMS(blueHighlights,  Blue Highlights,    DCTLUI_SLIDER_FLOAT, 1.0,  0.1, 3.0, 0.001)
 
-// Channel Copy
+// --------- Section: Channel Copy ---------
+// Grouping control for channel copy features.
 DEFINE_UI_PARAMS(enableChannelCopy, -- CHANNEL COPY --, DCTLUI_CHECK_BOX, 0)
 
 // Red Channel Copy
-DEFINE_UI_PARAMS(copyGreenToRed,  Copy Green to Red,  DCTLUI_CHECK_BOX, 0)
-DEFINE_UI_PARAMS(copyBlueToRed,   Copy Blue to Red,   DCTLUI_CHECK_BOX, 0)
+DEFINE_UI_PARAMS(copyGreenToRed,  Copy Green to Red,    DCTLUI_CHECK_BOX, 0)
+DEFINE_UI_PARAMS(copyBlueToRed,   Copy Blue to Red,     DCTLUI_CHECK_BOX, 0)
 
 // Green Channel Copy
-DEFINE_UI_PARAMS(copyRedToGreen,  Copy Red to Green,  DCTLUI_CHECK_BOX, 0)
-DEFINE_UI_PARAMS(copyBlueToGreen, Copy Blue to Green, DCTLUI_CHECK_BOX, 0)
+DEFINE_UI_PARAMS(copyRedToGreen,  Copy Red to Green,    DCTLUI_CHECK_BOX, 0)
+DEFINE_UI_PARAMS(copyBlueToGreen, Copy Blue to Green,   DCTLUI_CHECK_BOX, 0)
 
 // Blue Channel Copy
-DEFINE_UI_PARAMS(copyRedToBlue,   Copy Red to Blue,   DCTLUI_CHECK_BOX, 0)
-DEFINE_UI_PARAMS(copyGreenToBlue, Copy Green to Blue, DCTLUI_CHECK_BOX, 0)
+DEFINE_UI_PARAMS(copyRedToBlue,   Copy Red to Blue,     DCTLUI_CHECK_BOX, 0)
+DEFINE_UI_PARAMS(copyGreenToBlue, Copy Green to Blue,   DCTLUI_CHECK_BOX, 0)
 
-// Channel Removal
+// --------- Section: Channel Removal ---------
+// Grouping control for channel removal features.
 DEFINE_UI_PARAMS(enableChannelRemoval, -- CHANNEL REMOVAL --, DCTLUI_CHECK_BOX, 0)
-DEFINE_UI_PARAMS(removeRed,   Remove Red,   DCTLUI_CHECK_BOX, 0)
-DEFINE_UI_PARAMS(removeGreen, Remove Green, DCTLUI_CHECK_BOX, 0)
-DEFINE_UI_PARAMS(removeBlue,  Remove Blue,  DCTLUI_CHECK_BOX, 0)
+DEFINE_UI_PARAMS(removeRed,     Remove Red,    DCTLUI_CHECK_BOX, 0)
+DEFINE_UI_PARAMS(removeGreen,   Remove Green,  DCTLUI_CHECK_BOX, 0)
+DEFINE_UI_PARAMS(removeBlue,    Remove Blue,   DCTLUI_CHECK_BOX, 0)
+
 
 // =============================
-//      Helper Functions
+//      HELPER FUNCTIONS
 // =============================
 
+// Clamp value to the [0,1] range for safe channel operations.
 __DEVICE__ float clamp01(float x) {
     return _fminf(_fmaxf(x, 0.0f), 1.0f);
 }
 
+// Safe power function for gamma correction, avoids NaNs for low values.
 __DEVICE__ float safe_pow(float x, float y) {
     return _powf(_fmaxf(x, 1e-6f), y);
 }
 
+// LGGO (Lift, Gamma, Gain/Highlights, Offset) processing for each channel.
+// Applies shadows, midtones, highlights in an RGB vector.
 __DEVICE__ float3 applyLGGO(float3 col, float3 shadows, float3 midtones, float3 highlights) {
     col += shadows;
 
@@ -93,29 +113,32 @@ __DEVICE__ float3 applyLGGO(float3 col, float3 shadows, float3 midtones, float3 
     );
 }
 
+
 // =============================
-//         Entry Point
+//         MAIN ENTRY POINT
 // =============================
 
+// This is the main processing function for each pixel.
+// All controls and channel operations are handled in sequence for clarity and extensibility.
 __DEVICE__ float4 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B, float p_A)
 {
     float3 rgb = make_float3(p_R, p_G, p_B);
 
-    // --- Apply Global Balance ---
+    // --- Global Channel Balance (Lift/Gamma/Gain) ---
     rgb += globalShadows;
     rgb.x = safe_pow(clamp01(rgb.x), 1.0f / globalMidtones);
     rgb.y = safe_pow(clamp01(rgb.y), 1.0f / globalMidtones);
     rgb.z = safe_pow(clamp01(rgb.z), 1.0f / globalMidtones);
     rgb *= globalHighlights;
 
-    // --- Apply Channel Balance ---
-    float3 shadows   = make_float3(redShadows,   greenShadows,   blueShadows);
-    float3 midtones  = make_float3(redMidtones,  greenMidtones,  blueMidtones);
-    float3 highlights   = make_float3(redHighlights,   greenHighlights,   blueHighlights);
+    // --- Per-Channel Balance ---
+    float3 shadows     = make_float3(redShadows, greenShadows, blueShadows);
+    float3 midtones    = make_float3(redMidtones, greenMidtones, blueMidtones);
+    float3 highlights  = make_float3(redHighlights, greenHighlights, blueHighlights);
 
     rgb = applyLGGO(rgb, shadows, midtones, highlights);
 
-    // --- Apply Channel Copy ---
+    // --- Channel Copy Section ---
     if (enableChannelCopy > 0.5f) {
         // Red
         if (copyGreenToRed  > 0.5f) rgb.x = rgb.y;
@@ -128,14 +151,14 @@ __DEVICE__ float4 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
         if (copyGreenToBlue > 0.5f) rgb.z = rgb.y;
     }
 
-    // --- Apply Channel Removal ---
+    // --- Channel Removal Section ---
     if (enableChannelRemoval > 0.5f) {
         if (removeRed   > 0.5f) rgb.x = 0.0f;
         if (removeGreen > 0.5f) rgb.y = 0.0f;
         if (removeBlue  > 0.5f) rgb.z = 0.0f;
     }
 
-    // --- Apply Channel Mixing ---
+    // --- Channel Mixing Section ---
     if (channelMixingSection > 0.5f) {
         // Red min/max
         if (enableMinRedGreen > 0.5f)   rgb.x = _fminf(rgb.x, rgb.y); // Red = min(R, G)
