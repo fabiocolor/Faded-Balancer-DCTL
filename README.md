@@ -1,67 +1,59 @@
-FadedBalancerOFX
+# FadedBalancerOFX
 
-A DaVinci Resolve DCTL OFX plugin for adjusting channel balance and compensating for color fading or imbalances in film scans. While it does not recover lost color data, it improves visual accuracy and prepares faded footage for restoration or access.
+A DaVinci Resolve DCTL OFX plugin for balancing RGB channels and correcting faded film scans. It provides accessible and flexible tools for channel adjustment, mixing, and restoration preparation.
 
-⸻
+---
 
-Version
+### Version
 
-v1.0.0
-	•	Works on Windows
-	•	macOS compatibility in progress
-	•	Linux not yet tested
+**v1.1.0**
+-   **macOS:** Fully compatible.
+-   **Windows:** Fully compatible.
+-   **Linux:** Not yet tested.
 
-⸻
+---
 
-Features
-	•	Channel balance controls for Red, Green, and Blue (Lift, Gamma, Gain, Offset)
-	•	Channel copy toggles (e.g., copy Red to Blue, Green to Blue)
-	•	Channel removal options (remove Blue channel, etc.)
-	•	True bypass toggles for each section
-	•	Simple, intuitive UI for accessibility
+### Features
 
-⸻
+-   **Film Fade Correction:** A dedicated tool to correct faded footage by adaptively enhancing contrast and saturation.
+-   **Global & Per-Channel Balance:** Adjust Lift, Gamma, and Gain for all channels together or individually.
+-   **Channel Mixing:** Mix channels by taking the minimum or maximum values between them (e.g., `Red = min(Red, Green)`).
+-   **Channel Copy & Removal:** Easily copy data between channels or remove a channel entirely.
+-   **Optimized Processing:** All calculations are performed in 32-bit float, with a single clamp at the end of the pipeline to preserve maximum dynamic range and prevent data clipping.
 
-Intended Use
+---
 
-FadedBalancerOFX is intended for archivists, restoration specialists, and anyone working with digitally scanned film that has experienced dye fading or channel imbalance.
-It does not “restore” lost color information but provides flexible controls to make faded footage visually closer to neutral or more pleasant for review, restoration, or access workflows.
+### Intended Use
 
-⸻
+FadedBalancerOFX is designed for archivists, restoration specialists, and anyone working with digitally scanned film that exhibits dye fading or other channel imbalances. While it cannot restore lost color information, it provides the essential tools to neutralize color casts and prepare footage for further restoration work.
 
-Installation
-	1.	Download FadedBalancerOFX.dctl.
-	2.	Place it in your DaVinci Resolve LUTs or DCTL folder:
-	•	Windows:
-C:\ProgramData\Blackmagic Design\DaVinci Resolve\Support\LUT\
-	•	macOS:
-/Library/Application Support/Blackmagic Design/DaVinci Resolve/LUT/
-	3.	Restart DaVinci Resolve if it’s open.
-	4.	Add the DCTL OFX node in the Color page and select FadedBalancerOFX.
+---
 
-⸻
+### Installation
 
-Usage
-	•	Adjust Lift, Gamma, Gain, and Offset for each channel as needed.
-	•	Use channel copy toggles to transfer channel data (e.g., copy Red to Blue for faded cyan films).
-	•	Use channel removal to zero out an unwanted channel for analytic or creative purposes.
-	•	All adjustments are real-time and non-destructive.
+1.  Download `FadedBalancerOFX.dctl`.
+2.  Place it in your DaVinci Resolve LUT folder:
+    -   **Windows:** `C:\ProgramData\Blackmagic Design\DaVinci Resolve\Support\LUT\`
+    -   **macOS:** `/Library/Application Support/Blackmagic Design/DaVinci Resolve/LUT/`
+3.  Restart DaVinci Resolve.
+4.  In the Color page, add a "DCTL" effect to a node and select `FadedBalancerOFX` from the dropdown menu.
 
-⸻
+---
 
-Limitations
-	•	This tool cannot restore lost color data; it adjusts existing data for visual improvement.
-	•	macOS and Linux are not fully tested in v1.0.0.
-	•	Not intended for use outside of DaVinci Resolve.
+### Usage
 
-⸻
+-   **Fade Correction:** Start with the "Fade Correction" slider to globally improve contrast and saturation.
+-   **Channel Balance:** Use the "Global" sliders for overall adjustments, then fine-tune with the individual Red, Green, and Blue controls.
+-   **Channel Mixing/Copy:** Use these tools to manage severe color casts. For example, on a film where the cyan dye has faded (leaving a red cast), you can mix or copy the green or blue channels into the red channel to neutralize the image.
 
-License
+---
 
-MIT License
+### License
 
-⸻
+[MIT License](LICENSE)
 
-Credits
+---
+
+### Credits
 
 Developed by Fabio Bedoya.
