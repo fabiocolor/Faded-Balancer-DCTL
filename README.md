@@ -62,4 +62,6 @@ Developed by Fabio Bedoya.
 
 ### Acknowledgements
 
-The "Film Fade Correction" algorithm was inspired by the principles of digital film restoration and the work of researchers in the field, including the valuable contributions of Giorgio Trumpy.
+The "Film Fade Correction" algorithm was inspired by the principles of digital film restoration. Special thanks to the insights from the following paper:
+
+-   Trumpy, G., Flueckiger, B., & Goeth, A. (2023). *Digital Unfading of Chromogenic Film Informed by Its Spectral Densities*. [Link to paper](https://ntnuopen.ntnu.no/ntnu-xmlui/handle/11250/3101572)
