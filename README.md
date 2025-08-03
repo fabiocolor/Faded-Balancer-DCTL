@@ -57,3 +57,9 @@ FadedBalancerOFX is designed for archivists, restoration specialists, and anyone
 ### Credits
 
 Developed by Fabio Bedoya.
+
+---
+
+### Acknowledgements
+
+The "Film Fade Correction" algorithm was inspired by the principles of digital film restoration and the work of researchers in the field, including the valuable contributions of Giorgio Trumpy.
