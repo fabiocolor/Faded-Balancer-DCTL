@@ -1,0 +1,160 @@
+// FadedBalancerOFX.dctl
+// Resolve DCTL OFX plugin for RGB balancing of faded film
+
+// =============================
+//       UI Parameters
+// =============================
+
+// Global Balance
+DEFINE_UI_PARAMS(globalShadows,   Global Shadows,   DCTLUI_SLIDER_FLOAT, 0.0, -0.5, 0.5, 0.001)
+DEFINE_UI_PARAMS(globalMidtones,  Global Midtones,  DCTLUI_SLIDER_FLOAT, 1.0,  0.1, 3.0, 0.001)
+DEFINE_UI_PARAMS(globalHighlights, Global Highlights, DCTLUI_SLIDER_FLOAT, 1.0,  0.1, 3.0, 0.001)
+
+// Channel Mixing
+DEFINE_UI_PARAMS(channelMixingSection, -- CHANNEL MIXING --, DCTLUI_CHECK_BOX, 0)
+
+// Red Channel Mixing
+DEFINE_UI_PARAMS(enableMinRedGreen,   Red: Darken with Green,   DCTLUI_CHECK_BOX, 0)
+DEFINE_UI_PARAMS(enableMinRedBlue,    Red: Darken with Blue,    DCTLUI_CHECK_BOX, 0)
+DEFINE_UI_PARAMS(enableMaxRedGreen,   Red: Lighten with Green,   DCTLUI_CHECK_BOX, 0)
+DEFINE_UI_PARAMS(enableMaxRedBlue,    Red: Lighten with Blue,    DCTLUI_CHECK_BOX, 0)
+
+// Green Channel Mixing
+DEFINE_UI_PARAMS(enableMinGreenRed,   Green: Darken with Red,   DCTLUI_CHECK_BOX, 0)
+DEFINE_UI_PARAMS(enableMinGreenBlue,  Green: Darken with Blue,  DCTLUI_CHECK_BOX, 0)
+DEFINE_UI_PARAMS(enableMaxGreenRed,   Green: Lighten with Red,   DCTLUI_CHECK_BOX, 0)
+DEFINE_UI_PARAMS(enableMaxGreenBlue,  Green: Lighten with Blue,  DCTLUI_CHECK_BOX, 0)
+
+// Blue Channel Mixing
+DEFINE_UI_PARAMS(enableMinBlueRed,    Blue: Darken with Red,    DCTLUI_CHECK_BOX, 0)
+DEFINE_UI_PARAMS(enableMinBlueGreen,  Blue: Darken with Green,  DCTLUI_CHECK_BOX, 0)
+DEFINE_UI_PARAMS(enableMaxBlueRed,    Blue: Lighten with Red,   DCTLUI_CHECK_BOX, 0)
+DEFINE_UI_PARAMS(enableMaxBlueGreen,  Blue: Lighten with Green,  DCTLUI_CHECK_BOX, 0)
+
+// Channel Balance
+DEFINE_UI_PARAMS(redShadows,   Red Shadows,     DCTLUI_SLIDER_FLOAT, 0.0, -0.5, 0.5, 0.001)
+DEFINE_UI_PARAMS(redMidtones,  Red Midtones,    DCTLUI_SLIDER_FLOAT, 1.0,  0.1, 3.0, 0.001)
+DEFINE_UI_PARAMS(redHighlights,   Red Highlights,     DCTLUI_SLIDER_FLOAT, 1.0,  0.1, 3.0, 0.001)
+
+DEFINE_UI_PARAMS(greenShadows,   Green Shadows,   DCTLUI_SLIDER_FLOAT, 0.0, -0.5, 0.5, 0.001)
+DEFINE_UI_PARAMS(greenMidtones,  Green Midtones,  DCTLUI_SLIDER_FLOAT, 1.0,  0.1, 3.0, 0.001)
+DEFINE_UI_PARAMS(greenHighlights,   Green Highlights,   DCTLUI_SLIDER_FLOAT, 1.0,  0.1, 3.0, 0.001)
+
+DEFINE_UI_PARAMS(blueShadows,   Blue Shadows,    DCTLUI_SLIDER_FLOAT, 0.0, -0.5, 0.5, 0.001)
+DEFINE_UI_PARAMS(blueMidtones,  Blue Midtones,   DCTLUI_SLIDER_FLOAT, 1.0,  0.1, 3.0, 0.001)
+DEFINE_UI_PARAMS(blueHighlights,   Blue Highlights,    DCTLUI_SLIDER_FLOAT, 1.0,  0.1, 3.0, 0.001)
+
+// Channel Copy
+DEFINE_UI_PARAMS(enableChannelCopy, -- CHANNEL COPY --, DCTLUI_CHECK_BOX, 0)
+
+// Red Channel Copy
+DEFINE_UI_PARAMS(copyGreenToRed,  Copy Green to Red,  DCTLUI_CHECK_BOX, 0)
+DEFINE_UI_PARAMS(copyBlueToRed,   Copy Blue to Red,   DCTLUI_CHECK_BOX, 0)
+
+// Green Channel Copy
+DEFINE_UI_PARAMS(copyRedToGreen,  Copy Red to Green,  DCTLUI_CHECK_BOX, 0)
+DEFINE_UI_PARAMS(copyBlueToGreen, Copy Blue to Green, DCTLUI_CHECK_BOX, 0)
+
+// Blue Channel Copy
+DEFINE_UI_PARAMS(copyRedToBlue,   Copy Red to Blue,   DCTLUI_CHECK_BOX, 0)
+DEFINE_UI_PARAMS(copyGreenToBlue, Copy Green to Blue, DCTLUI_CHECK_BOX, 0)
+
+// Channel Removal
+DEFINE_UI_PARAMS(enableChannelRemoval, -- CHANNEL REMOVAL --, DCTLUI_CHECK_BOX, 0)
+DEFINE_UI_PARAMS(removeRed,   Remove Red,   DCTLUI_CHECK_BOX, 0)
+DEFINE_UI_PARAMS(removeGreen, Remove Green, DCTLUI_CHECK_BOX, 0)
+DEFINE_UI_PARAMS(removeBlue,  Remove Blue,  DCTLUI_CHECK_BOX, 0)
+
+// =============================
+//      Helper Functions
+// =============================
+
+__DEVICE__ float clamp01(float x) {
+    return _fminf(_fmaxf(x, 0.0f), 1.0f);
+}
+
+__DEVICE__ float safe_pow(float x, float y) {
+    return _powf(_fmaxf(x, 1e-6f), y);
+}
+
+__DEVICE__ float3 applyLGGO(float3 col, float3 shadows, float3 midtones, float3 highlights) {
+    col += shadows;
+
+    col.x = safe_pow(clamp01(col.x), 1.0f / midtones.x);
+    col.y = safe_pow(clamp01(col.y), 1.0f / midtones.y);
+    col.z = safe_pow(clamp01(col.z), 1.0f / midtones.z);
+
+    col = col * highlights;
+
+    return make_float3(
+        clamp01(col.x),
+        clamp01(col.y),
+        clamp01(col.z)
+    );
+}
+
+// =============================
+//         Entry Point
+// =============================
+
+__DEVICE__ float4 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B, float p_A)
+{
+    float3 rgb = make_float3(p_R, p_G, p_B);
+
+    // --- Apply Global Balance ---
+    rgb += globalShadows;
+    rgb.x = safe_pow(clamp01(rgb.x), 1.0f / globalMidtones);
+    rgb.y = safe_pow(clamp01(rgb.y), 1.0f / globalMidtones);
+    rgb.z = safe_pow(clamp01(rgb.z), 1.0f / globalMidtones);
+    rgb *= globalHighlights;
+
+    // --- Apply Channel Balance ---
+    float3 shadows   = make_float3(redShadows,   greenShadows,   blueShadows);
+    float3 midtones  = make_float3(redMidtones,  greenMidtones,  blueMidtones);
+    float3 highlights   = make_float3(redHighlights,   greenHighlights,   blueHighlights);
+
+    rgb = applyLGGO(rgb, shadows, midtones, highlights);
+
+    // --- Apply Channel Copy ---
+    if (enableChannelCopy > 0.5f) {
+        // Red
+        if (copyGreenToRed  > 0.5f) rgb.x = rgb.y;
+        if (copyBlueToRed   > 0.5f) rgb.x = rgb.z;
+        // Green
+        if (copyRedToGreen  > 0.5f) rgb.y = rgb.x;
+        if (copyBlueToGreen > 0.5f) rgb.y = rgb.z;
+        // Blue
+        if (copyRedToBlue   > 0.5f) rgb.z = rgb.x;
+        if (copyGreenToBlue > 0.5f) rgb.z = rgb.y;
+    }
+
+    // --- Apply Channel Removal ---
+    if (enableChannelRemoval > 0.5f) {
+        if (removeRed   > 0.5f) rgb.x = 0.0f;
+        if (removeGreen > 0.5f) rgb.y = 0.0f;
+        if (removeBlue  > 0.5f) rgb.z = 0.0f;
+    }
+
+    // --- Apply Channel Mixing ---
+    if (channelMixingSection > 0.5f) {
+        // Red min/max
+        if (enableMinRedGreen > 0.5f)   rgb.x = _fminf(rgb.x, rgb.y); // Red = min(R, G)
+        if (enableMinRedBlue > 0.5f)    rgb.x = _fminf(rgb.x, rgb.z); // Red = min(R, B)
+        if (enableMaxRedGreen > 0.5f)   rgb.x = _fmaxf(rgb.x, rgb.y); // Red = max(R, G)
+        if (enableMaxRedBlue > 0.5f)    rgb.x = _fmaxf(rgb.x, rgb.z); // Red = max(R, B)
+
+        // Green min/max
+        if (enableMinGreenRed > 0.5f)   rgb.y = _fminf(rgb.y, rgb.x); // Green = min(G, R)
+        if (enableMinGreenBlue > 0.5f)  rgb.y = _fminf(rgb.y, rgb.z); // Green = min(G, B)
+        if (enableMaxGreenRed > 0.5f)   rgb.y = _fmaxf(rgb.y, rgb.x); // Green = max(G, R)
+        if (enableMaxGreenBlue > 0.5f)  rgb.y = _fmaxf(rgb.y, rgb.z); // Green = max(G, B)
+
+        // Blue min/max
+        if (enableMinBlueRed > 0.5f)    rgb.z = _fminf(rgb.z, rgb.x); // Blue = min(B, R)
+        if (enableMinBlueGreen > 0.5f)  rgb.z = _fminf(rgb.z, rgb.y); // Blue = min(B, G)
+        if (enableMaxBlueRed > 0.5f)    rgb.z = _fmaxf(rgb.z, rgb.x); // Blue = max(B, R)
+        if (enableMaxBlueGreen > 0.5f)  rgb.z = _fmaxf(rgb.z, rgb.y); // Blue = max(B, G)
+    }
+
+    return make_float4(rgb, p_A);
+}
