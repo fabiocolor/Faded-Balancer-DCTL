@@ -97,7 +97,7 @@ Developed by Fabio Bedoya.
 
 ### Acknowledgements
 
-The "Film Fade Correction" feature was inspired by the principles of digital film restoration. Special thanks to the insights from the following paper:
+The "Film Fade Correction" feature was partially inspired by insights from the following paper, which provided a valuable foundation for the approach used:
 
 -   Trumpy, G., Flueckiger, B., & Goeth, A. (2023). *Digital Unfading of Chromogenic Film Informed by Its Spectral Densities*. [Link to paper](https://ntnuopen.ntnu.no/ntnu-xmlui/handle/11250/3101572)
 

@@ -113,7 +113,7 @@ __DEVICE__ float3 applyLGGO(float3 col, float3 shadows, float3 midtones, float3 
 }
 
 // Applies an adaptive saturation and contrast enhancement to correct faded footage.
-// Inspired by the principles discussed in "Digital Unfading of Chromogenic Film Informed by Its Spectral Densities" by G. Trumpy et al.
+// The approach is partially inspired by insights from "Digital Unfading of Chromogenic Film Informed by Its Spectral Densities" by G. Trumpy et al.
 // https://ntnuopen.ntnu.no/ntnu-xmlui/handle/11250/3101572
 __DEVICE__ float3 applyFadeCorrection(float3 col, float fadeCorrection) {
     if (fadeCorrection > 0.0f) {
