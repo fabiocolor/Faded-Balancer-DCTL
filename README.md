@@ -67,6 +67,14 @@ FadedBalancerOFX is designed for archivists, restoration specialists, and anyone
 -   **Channel Balance:** Use the "Global" sliders for overall adjustments, then fine-tune with the individual Red, Green, and Blue controls.
 -   **Channel Mixing/Copy:** Use these tools to manage severe color casts. For example, on a film where the cyan dye has faded (leaving a red cast), you can mix or copy the green or blue channels into the red channel to neutralize the image.
 
+### Workflow Recommendations
+
+To achieve the best results and preserve maximum image fidelity, consider the following workflow:
+
+*   **Preserve Dynamic Range:** Place a Color Space Transform (CST) node immediately *after* the FadedBalancerOFX effect. Set the CST's output to a logarithmic space like "Cineon Film Log". This ensures that any adjustments you make do not clip highlight or shadow detail, preserving the full dynamic range of your footage.
+
+*   **Avoid Clipping in Red Channel:** When dealing with significant red channel imbalances (common in faded film), it is often better to use the `Red Midtones` control for the primary correction. Using `Red Shadows` (lift) can sometimes crush shadow detail, whereas adjusting the midtones offers a gentler re-balance.
+
 ### Video Demonstration
 
 For a visual guide on how to use the plugin, check out the video tutorial below:
