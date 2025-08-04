@@ -100,3 +100,11 @@ Developed by Fabio Bedoya.
 The "Film Fade Correction" algorithm was inspired by the principles of digital film restoration. Special thanks to the insights from the following paper:
 
 -   Trumpy, G., Flueckiger, B., & Goeth, A. (2023). *Digital Unfading of Chromogenic Film Informed by Its Spectral Densities*. [Link to paper](https://ntnuopen.ntnu.no/ntnu-xmlui/handle/11250/3101572)
+
+---
+
+### Support the Project
+
+If you find this plugin useful and would like to support its ongoing development, please consider making a donation. Your support is greatly appreciated!
+
+[Donate via PayPal](https://paypal.me/fabiocolor)
