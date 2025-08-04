@@ -23,6 +23,22 @@ A DaVinci Resolve DCTL OFX plugin for balancing RGB channels and correcting fade
 
 ---
 
+### Before & After
+
+Here are a couple of examples showcasing the plugin's effectiveness in correcting faded film scans.
+
+**Example 1: Beach Scene**
+| Before | After |
+| :---: | :---: |
+| ![Beach Scene Before](assets/beach_before.png) | ![Beach Scene After](assets/beach_after.png) |
+
+**Example 2: Table Scene**
+| Before | After |
+| :---: | :---: |
+| ![Table Scene Before](assets/table_before.png) | ![Table Scene After](assets/table_after.png) |
+
+---
+
 ### Intended Use
 
 FadedBalancerOFX is designed for archivists, restoration specialists, and anyone working with digitally scanned film that exhibits dye fading or other channel imbalances. While it cannot restore lost color information, it provides the essential tools to neutralize color casts and prepare footage for further restoration work.
