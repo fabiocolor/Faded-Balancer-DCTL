@@ -46,6 +46,12 @@ FadedBalancerOFX is designed for archivists, restoration specialists, and anyone
 -   **Channel Balance:** Use the "Global" sliders for overall adjustments, then fine-tune with the individual Red, Green, and Blue controls.
 -   **Channel Mixing/Copy:** Use these tools to manage severe color casts. For example, on a film where the cyan dye has faded (leaving a red cast), you can mix or copy the green or blue channels into the red channel to neutralize the image.
 
+### Video Demonstration
+
+For a visual guide on how to use the plugin, check out the video tutorial below:
+
+[![FadedBalancerOFX Video Tutorial](https://img.youtube.com/vi/ATPkq5BHs-A/maxresdefault.jpg)](https://youtu.be/ATPkq5BHs-A)
+
 ---
 
 ### License
