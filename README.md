@@ -6,7 +6,7 @@ A DaVinci Resolve DCTL OFX plugin for balancing RGB channels and correcting fade
 
 ### Version
 
-**v1.1.0**
+**v1.2.0**
 -   **macOS:** Fully compatible.
 -   **Windows:** Fully compatible.
 -   **Linux:** Not yet tested.
@@ -19,7 +19,7 @@ A DaVinci Resolve DCTL OFX plugin for balancing RGB channels and correcting fade
 -   **Global & Per-Channel Balance:** Adjust Lift, Gamma, and Gain for all channels together or individually.
 -   **Channel Mixing:** Mix channels by taking the minimum or maximum values between them (e.g., `Red = min(Red, Green)`).
 -   **Channel Copy & Removal:** Easily copy data between channels or remove a channel entirely.
--   **Optimized Processing:** All calculations are performed in 32-bit float, with a single clamp at the end of the pipeline to preserve maximum dynamic range and prevent data clipping.
+<!-- Removed clamp reference: processing is in 32-bit float with optional Cineon log output -->
 
 ---
 
@@ -71,7 +71,7 @@ FadedBalancerOFX is designed for archivists, restoration specialists, and anyone
 
 To achieve the best results and preserve maximum image fidelity, consider the following workflow:
 
-*   **Preserve Dynamic Range:** Place a Color Space Transform (CST) node immediately *after* the FadedBalancerOFX effect. Set the CST's output to a logarithmic space like "Cineon Film Log". This ensures that any adjustments you make do not clip highlight or shadow detail, preserving the full dynamic range of your footage.
+*   **Prevent Clipping:** Enable the `Output to Cineon Log` checkbox to verify there is no highlight or shadow clipping in your image.
 
 *   **Avoid Clipping in Red Channel:** When dealing with significant red channel imbalances (common in faded film), it is often better to use the `Red Midtones` control for the primary correction. Using `Red Shadows` (lift) can sometimes crush shadow detail, whereas adjusting the midtones offers a gentler re-balance.
 
