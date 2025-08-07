@@ -11,6 +11,11 @@ A DaVinci Resolve DCTL OFX plugin for balancing RGB channels and correcting fade
 -   **Windows:** Fully compatible.
 -   **Linux:** Not yet tested.
 
+#### What's New in v1.2.0
+- Removed final hard clamp to preserve full floating-point range during grading.
+- Added `Output to Cineon Log` checkbox to inspect and balance channels safely without clipping.
+- Added per-channel Offset controls (Red/Green/Blue) for finer pre-lift channel alignment.
+
 ---
 
 ### Features
