@@ -6,10 +6,16 @@ A DaVinci Resolve DCTL OFX plugin for balancing RGB channels and correcting fade
 
 ### Version
 
-**v1.2.0**
+**v1.3.0**
 -   **macOS:** Fully compatible.
 -   **Windows:** Fully compatible.
 -   **Linux:** Not yet tested.
+
+#### What's New in v1.3.0
+- Added `Preserve Luminance` (⚖) – normalizes luma after per-channel stage only (global adjustments still shift exposure).
+- Renamed channel "Copy" operations to clearer **Replace** (e.g. "Replace Red → With Green").
+- Locked processing order: Global → Fade Correction → Per-Channel → Mixing → Replace → Removal → Output.
+- Consolidated UI/label/icon overhaul (option text simplification, Darken/Lighten composite combos, consistent icon set, duplicate definitions removed).
 
 #### What's New in v1.2.0
 - Removed final hard clamp to preserve full floating-point range during grading.
@@ -23,7 +29,7 @@ A DaVinci Resolve DCTL OFX plugin for balancing RGB channels and correcting fade
 -   **Film Fade Correction:** A dedicated tool to correct faded footage by adaptively enhancing contrast and saturation.
 -   **Global & Per-Channel Balance:** Adjust Lift, Gamma, and Gain for all channels together or individually.
 -   **Channel Mixing:** Mix channels by taking the minimum or maximum values between them (e.g., `Red = min(Red, Green)`).
--   **Channel Copy & Removal:** Easily copy data between channels or remove a channel entirely.
+-   **Channel Replace & Removal:** Replace a channel's data with another or remove a channel entirely (previously labeled Copy).
 <!-- Removed clamp reference: processing is in 32-bit float with optional Cineon log output -->
 
 ---
