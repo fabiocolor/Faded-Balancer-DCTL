@@ -31,6 +31,7 @@ When changing behavior, keep this order. Many tests and docs assume it (see `doc
 - UI patterns and param declarations: search for `DEFINE_UI_PARAMS` inside `FadedBalancerOFX.dctl` and referenced examples in docs (GainDCTLPlugin, ColorPicker notes in `docs/SPECIFICATION.md`).
 - Behavioral rules, acceptance tests and edge cases: `docs/TESTS.md` and `docs/EDGECASES.md`.
 - Installation and usage: `README.md` (installation path and usage notes).
+- Official language reference (entry signatures, intrinsics, UI control forms): `docs/vendor/bmd-dctl/README.md` (do not modify; treat as upstream spec). When in doubt about a function like `_mix`, `_powf`, `_fminf`, verify there first.
 
 ## Dev / test / debug workflow (manual)
 - Edit `FadedBalancerOFX.dctl` in-place. There is no build step.
@@ -44,6 +45,7 @@ When changing behavior, keep this order. Many tests and docs assume it (see `doc
 
 ## Useful code snippets (copy-paste safe)
 - Entry signature: `__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B)`
+- Alternate signature (with alpha) supported per BMD docs: `__DEVICE__ float4 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B, float p_A)` (current plugin uses float4 form already).
 - Midtones example: `float3 out = _powf(inColor, 1.0f / globalMidtones);` (remember `f` suffixes)
 - Mix example: `r = _fminf(r, g); // darken` and `r = _fmaxf(r, b); // lighten`
 
