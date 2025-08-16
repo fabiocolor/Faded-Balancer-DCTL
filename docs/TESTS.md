@@ -79,7 +79,7 @@ Expect: out ≈ in (subject to float precision).
 
 ## 3) Magenta Fade Scenario
 Input: neutral swatch where B is ~12% under R/G.
-Action: set blueHighlights=1.12 (and/or blueMidtones=0.95).
+Action: set blueHighlights=1.12f (and/or blueMidtones=0.95f).
 Expect: Δ(R−G) small; B approaches R/G without overshoot.
 
 ## 4) Darken/Lighten Composites
