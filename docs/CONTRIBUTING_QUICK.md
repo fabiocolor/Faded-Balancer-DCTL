@@ -7,7 +7,7 @@ Use this short checklist when reviewing PRs. Copy-paste into the PR body or use 
 - [ ] Before/after images attached (PNG) and RGB parade or histogram screenshots included for visual changes.
 
 DCTL-specific checks
-- [ ] Pipeline order preserved: Global → Fade → Per-channel (→ Preserve Luma) → Mix (min/max) → Replace → Removal → Output
+- [ ] Pipeline order preserved (see `docs/SPECIFICATION.md#authoritative-pipeline`).
 - [ ] UI params declared with `DEFINE_UI_PARAMS` and names match variables used in `transform()`
 - [ ] Float literals in code/examples use `f` suffix where needed (e.g., `0.5f`)
 - [ ] Only Resolve intrinsics used (`_powf`, `_fminf`, `_fmaxf`, `_clampf`, etc.)
@@ -30,3 +30,30 @@ Owner approval required for:
 Notes
 - Testing is manual — copy `FadedBalancerOFX.dctl` into Resolve LUT/DCTL folder and verify using scopes.
 - If in doubt, tag the repo owner (see `README.md`) for a final decision.
+
+## Lint checklist (one-page)
+Use this quick checklist before opening a PR. It replaces a previous repo script and focuses on human-reviewable items.
+
+- UI names
+	- [ ] Every `DEFINE_UI_PARAMS` first argument (identifier) is used inside `transform()` or copied into a local `_l` variable.
+	- [ ] UI names in `DEFINE_UI_PARAMS` exactly match the symbols referenced in code (case-sensitive).
+
+- Pipeline & behavior
+	 - [ ] Pipeline order preserved (see `docs/SPECIFICATION.md#authoritative-pipeline`).
+	- [ ] Preserve Luminance (when enabled) rescales using Rec.709 Y (verify Y_pre ≈ Y_post within epsilon).
+
+- Numeric & intrinsics
+	- [ ] Float literals use `f` suffix (e.g., `0.5f`).
+	- [ ] Midtones used as gamma: implemented as `_powf(in, 1.0f / midtones)` and kept in safe range (~0.1f..3.0f).
+	- [ ] Mix uses `_fminf`/`_fmaxf` only (no weighted blends).
+	- [ ] Only supported Resolve intrinsics used (`_powf`, `_fminf`, `_fmaxf`, `_clampf`, `_mix`, `_log10f`, etc.).
+
+- UI & UX
+	- [ ] Slider ranges in `DEFINE_UI_PARAMS` match documented ranges in `docs/API.md` (offsets ±0.5f, midtones ~[0.1f..3.0f], fadeCorrection [0..1]).
+	- [ ] UI control counts remain within Resolve limits (≤64 per UI type).
+
+- Docs & tests
+	- [ ] Update `docs/SPECIFICATION.md`, `docs/API.md`, `docs/TESTS.md`, and `docs/EDGECASES.md` when changing runtime behavior.
+	- [ ] Add acceptance test steps to `docs/TESTS.md` describing how the change was validated in Resolve.
+
+If you want automation later, we can add a tiny grep-based pre-commit check that enforces the UI-name rule; for now prefer this human checklist to keep reviews fast.

@@ -1,96 +1,54 @@
-# Acceptance Tests
+# Acceptance Tests — FadedBalancerOFX
 
-### Test 1: Neutral Fade Correction
-**Input:** Magenta faded clip.  
-**Operation:** Balance_R=-0.2f, Balance_B=+0.2f.  
-**Expected:** Neutral grey scale parade in RGB scopes.
+## Quick verify (30s)
+A short, practical checklist to validate the plugin quickly for non-technical users.
 
----
+1. Install the DCTL: copy `FadedBalancerOFX.dctl` to your Resolve LUT/DCTL folder and restart Resolve.
+2. Identity check: apply the plugin with default UI values to a neutral patch. Output should match input within floating tolerance (per-channel difference ≲ 1e-4).
+3. Simple correction example: on a faded/magenta test image, nudge `blueHighlights` by +0.10 and observe the RGB parade moving toward neutral; if `preserveLuminance` is used, verify Y_post ≈ Y_pre (±1e-3).
 
-### Test 2: Channel Copy
-**Input:** Blue channel fully blank.  
-**Operation:** Copy Green→Blue.  
-**Expected:** Reconstructed blue channel, histogram matches green.
+Purpose
+- Provide a short, reproducible set of manual acceptance tests that verify the plugin's public behavior and invariants. Tests are manual visual + numeric checks using Resolve scopes (RGB parade, histogram, and numeric readouts).
 
----
+How to run
+- Copy `FadedBalancerOFX.dctl` into your Resolve LUT/DCTL folder, restart Resolve, add a DCTL node, and use scopes to inspect results. For each test below, record the numeric scope values where applicable.
 
-### Test 3: Channel Removal
-**Input:** Normal clip.  
-**Operation:** Remove Red.  
-**Expected:** Output only Green + Blue.
+Tolerances
+- Equality/identity checks use a floating tolerance: ±1e-4 for per-channel comparisons, ±1e-3 for luminance comparisons.
 
----
+Tests
 
-### Test 4: Section Bypass
-**Input:** Clip with all toggles off.  
-**Expected:** Exact passthrough, no pixel change.
+1) Identity (smoke)
+- Setup: all UI controls at default values (preserveLuminance=0, outputToCineon=0).
+- Expect: output ≈ input (per-channel difference ≤ 1e-4 across a neutral patch).
 
----
+2) Preserve Luminance
+- Setup: apply a global fade (optional) then record Y_pre = 0.2126*R + 0.7152*G + 0.0722*B.
+- Action: apply per-channel edits (e.g., redHighlights=1.2f) with `preserveLuminance=1`.
+- Expect: Y_post within ±1e-3 of Y_pre; chroma (R,G,B) may change but luminance preserved.
 
-### Test 5: Extreme Gamma
-**Input:** Any clip.  
-**Operation:** Gamma_R=+1.0f.  
-**Expected:** Red channel curve visibly altered, but no values exceed [0,1].
+3) Darken / Lighten composites
+- Setup: use a test image with differing channels.
+- Action: set redDarkenWith = With Green → observe R_out = min(R_in, G_in). Then test redLightenWith = With Blue → R_out = max(R_in, B_in).
+- Expect: per-pixel numeric checks match `_fminf`/`_fmaxf` results.
 
----
-# Acceptance Tests
+4) Replace then Removal ordering
+- Action: set copyBlueSource = With Red, then set channelRemovalMode = Remove Blue.
+- Expect: operation order yields final blue channel = 0 (Replace runs before Removal).
 
-Visual and numerical acceptance tests apply as described.
+5) Cineon output
+- Action: enable `outputToCineon` and inspect per-channel curves and numeric values.
+- Expect: values are mapped to a Cineon-style log range; negative inputs clamp to 0.0 before mapping. The mapping is monotonic per-channel.
 
-Note:
-- UI behaviors (default values, tooltips, slider limits) verified by Resolve’s inspector.
-- Follows same semantics as GainDCTLPlugin and ColorPicker examples.
+6) Preset pre-transform behavior
+- Setup: choose a non-default `presetMode` and observe behavior.
+- Expect: presets apply as pre-transform suggestions to local copies (they do not overwrite UI-controlled variables) and may adjust suggested fade/mix/output flags.
 
-# Acceptance Tests
+7) Edge behavior: no final clamp
+- Setup: apply strong highlights/offsets producing values >1.0.
+- Expect: plugin does not apply a final clamp; values may exceed 1.0 in the internal pipeline unless `outputToCineon` is used.
 
-## 1. Identity
-Defaults → output == input (within float precision).
-
-## 2. Preserve Luma
-Adjust Red Highlights=1.2f, Preserve Luminance=1 → Y_post ≈ Y_pre (Δ ≤ 0.001).
-
-## 3. Magenta Fade Fix
-Input: Blue ~12% under R/G.  
-Action: BlueHighlights=1.12f.  
-Expect: R≈G≈B neutralized.
-
-## 4. Darken/Lighten
-RedDarkenWith=Green → R_out = _fminf(R,G).  
-RedLightenWith=Blue → R_out = _fmaxf(R,B).
-
-## 5. Replace + Remove
-copyBlueSource=Red, channelRemovalMode=Remove Blue.  
-Result: B = 0.
-
-## 6. Cineon Output
-outputToCineon=1.  
-Expect: monotonic log encoding per channel, no gamut ops.
-
-# Minimal Acceptance Tests (reference for Copilot)
-
-## 1) Identity
-Params: all defaults (preserveLuminance=0, outputToCineon=0)
-Expect: out ≈ in (subject to float precision).
-
-## 2) Preserve Luma Check
-- Record Y_pre after Fade.
-- Apply per-channel tweaks (e.g., redHighlights=1.2f).
-- With preserveLuminance=1, Y_post ≈ Y_pre (±1e-3), chroma changes visible.
-
-## 3) Magenta Fade Scenario
-Input: neutral swatch where B is ~12% under R/G.
-Action: set blueHighlights=1.12f (and/or blueMidtones=0.95f).
-Expect: Δ(R−G) small; B approaches R/G without overshoot.
-
-## 4) Darken/Lighten Composites
-Set redDarkenWith=With Green, redLightenWith=None.
-Expect: R_out = min(R_in, G_in). With Lighten: R_out = max(R_in, G_in).
-
-## 5) Replace Then Remove
-Set copyBlueSource=With Red, channelRemovalMode=Remove Blue.
-Expect: B becomes R, then zeroed → final B = 0.
-
-## 6) Cineon Output Sanity
-Enable outputToCineon=1.
-Expect: monotonic encoding per channel; mid-grays compress toward log mid.
+Notes
+- If any test fails due to a behavioral change, update `docs/SPECIFICATION.md`, `docs/API.md`, `docs/EDGECASES.md`, and `docs/TESTS.md` together and request owner approval for non-trivial changes.
+- These tests are acceptance-level manual checks; automated unit tests are not applicable inside Resolve and require external tooling or mock harnesses.
 

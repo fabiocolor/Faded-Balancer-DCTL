@@ -6,7 +6,7 @@ A DaVinci Resolve DCTL OFX plugin for balancing RGB channels and correcting fade
 
 ### Version
 
-**v1.3.0**
+**v1.3.1**
 -   **macOS:** Fully compatible.
 -   **Windows:** Fully compatible.
 -   **Linux:** Not yet tested.
@@ -14,7 +14,7 @@ A DaVinci Resolve DCTL OFX plugin for balancing RGB channels and correcting fade
 #### What's New in v1.3.0
 - Added `Preserve Luminance` (⚖) – normalizes luma after per-channel stage only (global adjustments still shift exposure).
 - Renamed channel "Copy" operations to clearer **Replace** (e.g. "Replace Red → With Green").
-- Locked processing order: Global → Fade Correction → Per-Channel → Mixing → Replace → Removal → Output.
+- Processing order is canonical; see `docs/SPECIFICATION.md#authoritative-pipeline` for the authoritative pipeline and invariants.
 - Consolidated UI/label/icon overhaul (option text simplification, Darken/Lighten composite combos, consistent icon set, duplicate definitions removed).
 
 #### What's New in v1.2.0
@@ -119,3 +119,9 @@ The "Film Fade Correction" feature was partially inspired by insights from the f
 If you find this plugin useful and would like to support its ongoing development, please consider making a donation. Your support is greatly appreciated!
 
 [Donate via PayPal](https://paypal.me/fabiocolor)
+
+## Contributing
+
+Please run the pre-review mini-check from `docs/CODING_GUIDE.md` before opening a PR. New PRs are pre-filled with a template that includes this mini-check (see `.github/PULL_REQUEST_TEMPLATE.md`). For the full reviewer checklist, see `docs/CONTRIBUTING_QUICK.md`.
+
+When in doubt about a change that affects pipeline order, UI names, or numeric ranges, tag the repository owner for approval.

@@ -14,15 +14,15 @@
 // - Presets are non-destructive suggestions applied to the pixel before global adjustments.
 // - UI slider values remain editable; presets do not write back to the Inspector.
 //
-// --- Preset identifiers & selector (Eatman Color 1 / Eastman Color 2 / Eastman Color 3..5)
+#// --- Preset identifiers & selector (Eastman Color 1 / Eastman Color 2 / Eastman Color 3..5)
 #define PRESET_NONE      0
-#define PRESET_EATMAN1   1
+#define PRESET_EASTMAN1  1
 #define PRESET_EASTMAN2  2
 #define PRESET_EASTMAN3  3
 #define PRESET_EASTMAN4  4
 #define PRESET_EASTMAN5  5
 
-DEFINE_UI_PARAMS(presetMode, Preset, DCTLUI_COMBO_BOX, 0, { PRESET_NONE, PRESET_EATMAN1, PRESET_EASTMAN2, PRESET_EASTMAN3, PRESET_EASTMAN4, PRESET_EASTMAN5 }, { None, Eatman Color 1, Eastman Color 2, Eastman Color 3, Eastman Color 4, Eastman Color 5 })
+DEFINE_UI_PARAMS(presetMode, Preset, DCTLUI_COMBO_BOX, 0, { PRESET_NONE, PRESET_EASTMAN1, PRESET_EASTMAN2, PRESET_EASTMAN3, PRESET_EASTMAN4, PRESET_EASTMAN5 }, { None, Eastman Color 1, Eastman Color 2, Eastman Color 3, Eastman Color 4, Eastman Color 5 })
 // (presetBlend removed — presets apply directly to local copies before processing)
 
 
@@ -192,7 +192,7 @@ __DEVICE__ float4 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
     int p_outputToCineon = 0;
 
     // define presets as pre-transform suggestions (do NOT overwrite UI *_l)
-    if (presetMode == PRESET_EATMAN1) {
+    if (presetMode == PRESET_EASTMAN1) {
         preset_applied = 1;
         p_globalShadows = 0.074f;
         p_globalMidtones = 1.000f;

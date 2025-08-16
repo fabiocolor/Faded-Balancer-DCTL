@@ -11,7 +11,7 @@ Please keep changes small, reversible, and well-documented.
 - Describe behavioral changes and list acceptance tests you used from `docs/TESTS.md`.
 
 ## DCTL-specific rules (must follow)
-- Keep the canonical pipeline order: Global → Fade → Per-channel (→ Preserve Luma) → Mix (min/max) → Replace → Removal → Output (Cineon).
+- Keep the canonical pipeline order (see `docs/SPECIFICATION.md#authoritative-pipeline`) when making changes.
 - UI controls must be declared with `DEFINE_UI_PARAMS` and their variable names must match the names used in `transform()`.
 - Float literals must end with `f` (e.g., `0.5f`).
 - Use only Resolve/DCTL intrinsics (`_powf`, `_fminf`, `_fmaxf`, `_clampf`, etc.).
