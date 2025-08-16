@@ -1,7 +1,30 @@
-// FadedBalancerOFX v1.3.0
+// FadedBalancerOFX v1.3.1
 // Corrective RGB rebalance for faded / color‑shifted film scans.
-// Pipeline: Global -> Fade Fix -> Per-Channel -> Mix (Darken/Lighten) -> Replace -> Remove -> Output (optional Cineon).
-// Preserve Luminance applies ONLY to per‑channel stage.
+// Pipeline (per-pixel): 
+//   1) Optional PRESET pre-transform (apply film-stock suggestions to the original pixel)
+//   2) Global adjustments (Offset / Shadows / Midtones / Highlights)
+//   3) Fade correction (contrast/saturation nudge for faded scans)
+//   4) Per-channel adjustments (Offset / Shadows / Midtones / Highlights)
+//   5) Channel mixing (Darken/Lighten composites)
+//   6) Channel copy/replace
+//   7) Channel removal & final output mapping (optional Cineon)
+//
+// Notes:
+// - PreserveLuminance affects only the Per-channel stage (step 4).
+// - Presets are non-destructive suggestions applied to the pixel before global adjustments.
+// - UI slider values remain editable; presets do not write back to the Inspector.
+//
+// --- Preset identifiers & selector (Eatman Color 1 / Eastman Color 2 / Eastman Color 3..5)
+#define PRESET_NONE      0
+#define PRESET_EATMAN1   1
+#define PRESET_EASTMAN2  2
+#define PRESET_EASTMAN3  3
+#define PRESET_EASTMAN4  4
+#define PRESET_EASTMAN5  5
+
+DEFINE_UI_PARAMS(presetMode, Preset, DCTLUI_COMBO_BOX, 0, { PRESET_NONE, PRESET_EATMAN1, PRESET_EASTMAN2, PRESET_EASTMAN3, PRESET_EASTMAN4, PRESET_EASTMAN5 }, { None, Eatman Color 1, Eastman Color 2, Eastman Color 3, Eastman Color 4, Eastman Color 5 })
+// (presetBlend removed — presets apply directly to local copies before processing)
+
 
 // === UI PARAMETERS ===
 
@@ -45,8 +68,39 @@ DEFINE_UI_PARAMS(outputToCineon, 🎞️ Output to Cineon Log, DCTLUI_CHECK_BOX,
 
 // === HELPERS ===
 
+// TODO (docs/examples): small, safe examples for editors/AI agents.
+// These are non-functional comments to show typical patterns used in this file.
+// 1) Midtones (gamma) example using safe_pow (use in a local transform or helper):
+//    // make midtones vector from a single UI slider
+//    float3 midtones = make_float3(globalMidtones_l, globalMidtones_l, globalMidtones_l);
+//    rgb.x = safe_pow(rgb.x, 1.0f / midtones.x);
+//    rgb.y = safe_pow(rgb.y, 1.0f / midtones.y);
+//    rgb.z = safe_pow(rgb.z, 1.0f / midtones.z);
+// 2) Mix (darken) example (pure min):
+//    rgb.x = _fminf(rgb.x, rgb.y); // red = min(red, green)
+// Notes: Keep comments as examples only — do not change pipeline order or UI names.
+
+// Optional UI tooltips (Resolve 19.1+). These are shown as examples and are commented out
+// to avoid changing runtime behavior. Uncomment to enable tooltips in the DCTL UI.
+// Example usage:
+// DEFINE_UI_TOOLTIP(fadeCorrection, "Soft contrast & saturation boost for faded film scans.")
+// DEFINE_UI_TOOLTIP(preserveLuminance, "Rescale RGB after per-channel adjustments to preserve Rec.709 luma.")
+// DEFINE_UI_TOOLTIP(outputToCineon, "Encode per-channel linear→Cineon log for inspection (no gamut or matrix ops).")
+// DEFINE_UI_TOOLTIP(globalMidtones, "Global midtones (gamma). Keep in range ~[0.1f..3.0f] to avoid unstable pow().")
+
+
+
+// safe_pow: avoid domain errors by clamping base to a small positive value.
+// Uses _powf for GPU-friendly exp.
 __DEVICE__ float safe_pow(float x, float y) { return _powf(_fmaxf(x, 1e-9f), y); }
 
+// applyLGGO: simple pipeline helper that applies Offset -> Shadows -> Midtones (gamma) -> Highlights (gain).
+// Parameters:
+//   col       - input color
+//   offset    - per-channel additive offset
+//   shadows   - per-channel shadow adjustment (additive)
+//   midtones  - per-channel midtone exponent (1.0 = neutral)
+//   highlights- per-channel multiplicative highlight scale (1.0 = neutral)
 __DEVICE__ float3 applyLGGO(float3 col, float3 offset, float3 shadows, float3 midtones, float3 highlights) {
     col += offset;
     col += shadows;
@@ -57,12 +111,17 @@ __DEVICE__ float3 applyLGGO(float3 col, float3 offset, float3 shadows, float3 mi
     return col;
 }
 
+// applyFadeCorrection:
+// - soft contrast & saturation boost that can be mixed via fadeCorrection [0..1].
+// - preserves overall luminance by re-scaling to the target finalLuma.
 __DEVICE__ float3 applyFadeCorrection(float3 col, float fadeCorrection) {
     if (fadeCorrection > 0.0f) {
         float luma = col.x * 0.2126f + col.y * 0.7152f + col.z * 0.0722f;
+        // smooth contrast curve (ease-in/out)
         float contrastedLuma = luma * luma * (3.0f - 2.0f * luma);
         float finalLuma = _mix(luma, contrastedLuma, fadeCorrection);
         float3 lumaColor = make_float3(luma, luma, luma);
+        // simple saturation amount: 1.0 = neutral, >1 increases color punch
         float satAmount = 1.0f + fadeCorrection;
         float3 saturatedCol = _mix(lumaColor, col, satAmount);
         col = _mix(col, saturatedCol, fadeCorrection);
@@ -72,61 +131,207 @@ __DEVICE__ float3 applyFadeCorrection(float3 col, float fadeCorrection) {
     return col;
 }
 
+// linearToCineon: converts a linear value to Cineon-style log range.
+// Negative or zero input is clamped to 0.0 to avoid NaNs/infinities on GPU.
+// (Keep this simple — if you need exact Cineon film-formula mapping, we can replace with a tested reference.)
 __DEVICE__ float linearToCineon(float linear) {
-    if (linear <= 0.0f) return -1.0e+10f; // negative infinity representation
-    return (1023.0f * (0.30102999566 * _log10f(linear * 0.9f) + 0.66666666667)) / 1023.0f;
+    if (linear <= 0.0f) return 0.0f;
+    // keep original formula but clamp result to [0,1]
+    float mapped = (1023.0f * (0.30102999566 * _log10f(linear * 0.9f) + 0.66666666667)) / 1023.0f;
+    return _fmaxf(0.0f, _fminf(mapped, 1.0f));
 }
 
 
 // === MAIN TRANSFORM === (signature as required by Resolve)
 __DEVICE__ float4 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B, float p_A) {
-    // (p_Width, p_Height, p_X, p_Y) not used in this effect; retained to satisfy required signature.
+    // Preserve incoming pixel
     float3 rgb = make_float3(p_R, p_G, p_B);
 
-    // 1. Global Adjust (allowed to change luminance)
-    rgb = applyLGGO(rgb,
-        make_float3(globalOffset, globalOffset, globalOffset),
-        make_float3(globalShadows, globalShadows, globalShadows),
-        make_float3(globalMidtones, globalMidtones, globalMidtones),
-        make_float3(globalHighlights, globalHighlights, globalHighlights));
+    // --- local copies of UI params (presets only modify these)
+    float fadeCorrection_l    = fadeCorrection;
+    float globalOffset_l      = globalOffset;
+    float globalShadows_l     = globalShadows;
+    float globalMidtones_l    = globalMidtones;
+    float globalHighlights_l  = globalHighlights;
+    float preserveLuminance_l = preserveLuminance;
 
-    // 2. Fade Correction
-    rgb = applyFadeCorrection(rgb, fadeCorrection);
+    float redOffset_l     = redOffset;     float redShadows_l    = redShadows;    float redMidtones_l   = redMidtones;   float redHighlights_l   = redHighlights;
+    float greenOffset_l   = greenOffset;   float greenShadows_l  = greenShadows;  float greenMidtones_l = greenMidtones; float greenHighlights_l = greenHighlights;
+    float blueOffset_l    = blueOffset;    float blueShadows_l   = blueShadows;   float blueMidtones_l  = blueMidtones;  float blueHighlights_l  = blueHighlights;
+
+    // local copies for combo / copy / removal / output so presets can suggest them:
+    int redDarkenWith_l    = redDarkenWith;
+    int redLightenWith_l   = redLightenWith;
+    int greenDarkenWith_l  = greenDarkenWith;
+    int greenLightenWith_l = greenLightenWith;
+    int blueDarkenWith_l   = blueDarkenWith;
+    int blueLightenWith_l  = blueLightenWith;
+
+    int copyRedSource_l    = copyRedSource;
+    int copyGreenSource_l  = copyGreenSource;
+    int copyBlueSource_l   = copyBlueSource;
+
+    int channelRemovalMode_l = channelRemovalMode;
+    int outputToCineon_l     = (outputToCineon > 0.5f) ? 1 : 0;
+
+    // --- PRESSET PRE-TRANSFORM (apply BEFORE any Global adjustments)
+    // prepare preset pre-transform candidates (defaults = no-op)
+    int preset_applied = 0;
+    float preset_fade = 0.0f;
+
+    float p_globalOffset = 0.0f;
+    float p_globalShadows = 0.0f;
+    float p_globalMidtones = 1.0f;
+    float p_globalHighlights = 1.0f;
+
+    float p_redOffset = 0.0f;   float p_redShadows = 0.0f;   float p_redMidtones = 1.0f;   float p_redHighlights = 1.0f;
+    float p_greenOffset = 0.0f; float p_greenShadows = 0.0f; float p_greenMidtones = 1.0f; float p_greenHighlights = 1.0f;
+    float p_blueOffset = 0.0f;  float p_blueShadows = 0.0f;  float p_blueMidtones = 1.0f;  float p_blueHighlights = 1.0f;
+
+    int p_blueDarkenWith = BDW_NONE;
+    int p_outputToCineon = 0;
+
+    // define presets as pre-transform suggestions (do NOT overwrite UI *_l)
+    if (presetMode == PRESET_EATMAN1) {
+        preset_applied = 1;
+        p_globalShadows = 0.074f;
+        p_globalMidtones = 1.000f;
+        p_globalHighlights = 0.864f;
+        preset_fade = 0.0f;
+
+        p_redOffset = -0.081f; p_redShadows = 0.213f; p_redMidtones = 0.347f; p_redHighlights = 1.067f;
+        p_greenOffset = 0.0f;   p_greenShadows = 0.0f;   p_greenMidtones = 1.0f;   p_greenHighlights = 1.0f;
+        p_blueOffset = -0.043f; p_blueShadows = 0.0f;    p_blueMidtones = 0.887f;  p_blueHighlights = 1.0f;
+    }
+
+    if (presetMode == PRESET_EASTMAN2) {
+        preset_applied = 1;
+        p_globalShadows = 0.019f;
+        p_globalMidtones = 1.000f;
+        p_globalHighlights = 0.977f;
+        preset_fade = 0.0f;
+
+        p_redOffset = -0.221f; p_redShadows = 0.012f; p_redMidtones = 0.684f; p_redHighlights = 1.494f;
+        p_greenOffset = 0.0f;  p_greenShadows = 0.0f;  p_greenMidtones = 1.0f;   p_greenHighlights = 1.0f;
+        p_blueOffset = 0.0f;   p_blueShadows = 0.0f;   p_blueMidtones = 0.640f;  p_blueHighlights = 1.291f;
+
+        p_blueDarkenWith = BDW_GREEN;
+        p_outputToCineon = 0;
+    }
+
+    if (presetMode == PRESET_EASTMAN3) {
+        preset_applied = 1;
+        p_globalShadows = 0.053f;
+        p_globalMidtones = 1.000f;
+        p_globalHighlights = 1.045f;
+        preset_fade = 0.485f;
+
+        p_redOffset = 0.0f; p_redShadows = -0.303f; p_redMidtones = 0.430f; p_redHighlights = 2.670f;
+        p_greenOffset = 0.0f; p_greenShadows = 0.0f; p_greenMidtones = 1.0f; p_greenHighlights = 1.0f;
+        p_blueOffset = 0.0f; p_blueShadows = -0.038f; p_blueMidtones = 1.0f; p_blueHighlights = 1.067f;
+
+        p_blueDarkenWith = BDW_GREEN;
+        p_outputToCineon = 0;
+    }
+
+    if (presetMode == PRESET_EASTMAN4) {
+        preset_applied = 1;
+        p_globalShadows = 0.0f;
+        p_globalMidtones = 1.000f;
+        p_globalHighlights = 1.045f;
+        preset_fade = 0.485f;
+
+        p_redOffset = 0.0f; p_redShadows = -0.303f; p_redMidtones = 0.430f; p_redHighlights = 2.670f;
+        p_greenOffset = 0.0f; p_greenShadows = 0.0f; p_greenMidtones = 1.0f; p_greenHighlights = 1.0f;
+        p_blueOffset = 0.0f; p_blueShadows = -0.043f; p_blueMidtones = 1.0f; p_blueHighlights = 1.067f;
+
+        p_blueDarkenWith = BDW_GREEN;
+        p_outputToCineon = 0;
+    }
+
+    if (presetMode == PRESET_EASTMAN5) {
+        preset_applied = 1;
+        p_globalShadows = 0.043f;
+        p_globalMidtones = 1.000f;
+        p_globalHighlights = 1.134f;
+        preset_fade = 0.558f;
+
+        p_redOffset = 0.0f; p_redShadows = 0.0f; p_redMidtones = 0.302f; p_redHighlights = 1.269f;
+        p_greenOffset = 0.0f; p_greenShadows = 0.0f; p_greenMidtones = 1.0f; p_greenHighlights = 1.0f;
+        p_blueOffset = 0.0f; p_blueShadows = -0.038f; p_blueMidtones = 1.0f; p_blueHighlights = 1.0f;
+
+        p_blueDarkenWith = BDW_GREEN;
+        p_outputToCineon = 0;
+    }
+
+    // Apply preset pre-transform to original pixel first (if any preset selected).
+    if (preset_applied) {
+        // apply global-style preset pass first
+        rgb = applyLGGO(rgb,
+            make_float3(p_globalOffset, p_globalOffset, p_globalOffset),
+            make_float3(p_globalShadows, p_globalShadows, p_globalShadows),
+            make_float3(p_globalMidtones, p_globalMidtones, p_globalMidtones),
+            make_float3(p_globalHighlights, p_globalHighlights, p_globalHighlights));
+
+        // apply per-channel preset pass
+        rgb = applyLGGO(rgb,
+            make_float3(p_redOffset, p_greenOffset, p_blueOffset),
+            make_float3(p_redShadows, p_greenShadows, p_blueShadows),
+            make_float3(p_redMidtones, p_greenMidtones, p_blueMidtones),
+            make_float3(p_redHighlights, p_greenHighlights, p_blueHighlights));
+
+        // ensure fadeCorrection includes preset fade suggestion (preset first)
+        fadeCorrection_l = _fmaxf(fadeCorrection_l, preset_fade);
+
+        // if preset suggests a mixing/copy/output change, apply as initial suggestions
+        if (p_blueDarkenWith != BDW_NONE) blueDarkenWith_l = p_blueDarkenWith;
+        if (p_outputToCineon != 0) outputToCineon_l = p_outputToCineon;
+    }
+
+    // --- 1. Global Adjust (allowed to change luminance)
+    rgb = applyLGGO(rgb,
+        make_float3(globalOffset_l, globalOffset_l, globalOffset_l),
+        make_float3(globalShadows_l, globalShadows_l, globalShadows_l),
+        make_float3(globalMidtones_l, globalMidtones_l, globalMidtones_l),
+        make_float3(globalHighlights_l, globalHighlights_l, globalHighlights_l));
+
+    // --- 2. Fade Correction
+    rgb = applyFadeCorrection(rgb, fadeCorrection_l);
 
     // Capture luma before per-channel adjustments for optional preservation.
     float preChannelLuma = rgb.x * 0.2126f + rgb.y * 0.7152f + rgb.z * 0.0722f;
 
-    // 3. Per-Channel Adjust (optionally preserve luminance after this stage)
+    // --- 3. Per-Channel Adjust (optionally preserve luminance after this stage)
     rgb = applyLGGO(rgb,
-        make_float3(redOffset, greenOffset, blueOffset),
-        make_float3(redShadows, greenShadows, blueShadows),
-        make_float3(redMidtones, greenMidtones, blueMidtones),
-        make_float3(redHighlights, greenHighlights, blueHighlights));
-    if (preserveLuminance > 0.5f) {
+        make_float3(redOffset_l, greenOffset_l, blueOffset_l),
+        make_float3(redShadows_l, greenShadows_l, blueShadows_l),
+        make_float3(redMidtones_l, greenMidtones_l, blueMidtones_l),
+        make_float3(redHighlights_l, greenHighlights_l, blueHighlights_l));
+    if (preserveLuminance_l > 0.5f) {
         float postChannelLuma = rgb.x * 0.2126f + rgb.y * 0.7152f + rgb.z * 0.0722f;
         if (postChannelLuma > 1e-9f) rgb *= preChannelLuma / postChannelLuma;
     }
 
-    // 4. Mixing (Darken / Lighten)
-    if (redDarkenWith == RDW_GREEN) rgb.x = _fminf(rgb.x, rgb.y); else if (redDarkenWith == RDW_BLUE) rgb.x = _fminf(rgb.x, rgb.z);
-    if (redLightenWith == RLW_GREEN) rgb.x = _fmaxf(rgb.x, rgb.y); else if (redLightenWith == RLW_BLUE) rgb.x = _fmaxf(rgb.x, rgb.z);
-    if (greenDarkenWith == GDW_RED) rgb.y = _fminf(rgb.y, rgb.x); else if (greenDarkenWith == GDW_BLUE) rgb.y = _fminf(rgb.y, rgb.z);
-    if (greenLightenWith == GLW_RED) rgb.y = _fmaxf(rgb.y, rgb.x); else if (greenLightenWith == GLW_BLUE) rgb.y = _fmaxf(rgb.y, rgb.z);
-    if (blueDarkenWith == BDW_RED) rgb.z = _fminf(rgb.z, rgb.x); else if (blueDarkenWith == BDW_GREEN) rgb.z = _fminf(rgb.z, rgb.y);
-    if (blueLightenWith == BLW_RED) rgb.z = _fmaxf(rgb.z, rgb.x); else if (blueLightenWith == BLW_GREEN) rgb.z = _fmaxf(rgb.z, rgb.y);
+    // --- 4. Mixing (Darken / Lighten) — use local combo copies
+    if (redDarkenWith_l == RDW_GREEN) rgb.x = _fminf(rgb.x, rgb.y); else if (redDarkenWith_l == RDW_BLUE) rgb.x = _fminf(rgb.x, rgb.z);
+    if (redLightenWith_l == RLW_GREEN) rgb.x = _fmaxf(rgb.x, rgb.y); else if (redLightenWith_l == RLW_BLUE) rgb.x = _fmaxf(rgb.x, rgb.z);
+    if (greenDarkenWith_l == GDW_RED) rgb.y = _fminf(rgb.y, rgb.x); else if (greenDarkenWith_l == GDW_BLUE) rgb.y = _fminf(rgb.y, rgb.z);
+    if (greenLightenWith_l == GLW_RED) rgb.y = _fmaxf(rgb.y, rgb.x); else if (greenLightenWith_l == GLW_BLUE) rgb.y = _fmaxf(rgb.y, rgb.z);
+    if (blueDarkenWith_l == BDW_RED) rgb.z = _fminf(rgb.z, rgb.x); else if (blueDarkenWith_l == BDW_GREEN) rgb.z = _fminf(rgb.z, rgb.y);
+    if (blueLightenWith_l == BLW_RED) rgb.z = _fmaxf(rgb.z, rgb.x); else if (blueLightenWith_l == BLW_GREEN) rgb.z = _fmaxf(rgb.z, rgb.y);
 
-    // 5. Copy
-    if (copyRedSource == CR_FROM_GREEN) rgb.x = rgb.y; else if (copyRedSource == CR_FROM_BLUE) rgb.x = rgb.z;
-    if (copyGreenSource == CG_FROM_RED) rgb.y = rgb.x; else if (copyGreenSource == CG_FROM_BLUE) rgb.y = rgb.z;
-    if (copyBlueSource == CB_FROM_RED) rgb.z = rgb.x; else if (copyBlueSource == CB_FROM_GREEN) rgb.z = rgb.y;
+    // --- 5. Copy (use local copy sources)
+    if (copyRedSource_l == CR_FROM_GREEN) rgb.x = rgb.y; else if (copyRedSource_l == CR_FROM_BLUE) rgb.x = rgb.z;
+    if (copyGreenSource_l == CG_FROM_RED) rgb.y = rgb.x; else if (copyGreenSource_l == CG_FROM_BLUE) rgb.y = rgb.z;
+    if (copyBlueSource_l == CB_FROM_RED) rgb.z = rgb.x; else if (copyBlueSource_l == CB_FROM_GREEN) rgb.z = rgb.y;
 
-    // 6. Removal
-    if (channelRemovalMode == REM_RED || channelRemovalMode == REM_ALL) rgb.x = 0.0f;
-    if (channelRemovalMode == REM_GREEN || channelRemovalMode == REM_ALL) rgb.y = 0.0f;
-    if (channelRemovalMode == REM_BLUE || channelRemovalMode == REM_ALL) rgb.z = 0.0f;
+    // --- 6. Removal (use local removal)
+    if (channelRemovalMode_l == REM_RED || channelRemovalMode_l == REM_ALL) rgb.x = 0.0f;
+    if (channelRemovalMode_l == REM_GREEN || channelRemovalMode_l == REM_ALL) rgb.y = 0.0f;
+    if (channelRemovalMode_l == REM_BLUE || channelRemovalMode_l == REM_ALL) rgb.z = 0.0f;
 
-    // 7. Output
-    if (outputToCineon > 0.5f) {
+    // --- 7. Output (use local flag)
+    if (outputToCineon_l != 0) {
         rgb.x = linearToCineon(rgb.x);
         rgb.y = linearToCineon(rgb.y);
         rgb.z = linearToCineon(rgb.z);
