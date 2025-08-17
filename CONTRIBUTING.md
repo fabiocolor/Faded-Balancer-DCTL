@@ -23,11 +23,11 @@ Please keep changes small, reversible, and well-documented.
 
 ## Safe, low-risk edits
 You may do these without prior approval:
-- Fix typos and grammar in `docs/*.md` and UI tooltips.
-- Add or expand inline examples or `// TODO` anchors in `FadedBalancerOFX.dctl` and docs.
-- Normalize example float literals in docs/comments to include `f` (don’t change runtime constants without approval).
-- Add or update short acceptance steps in `docs/TESTS.md` (keep test semantics the same).
-- Reformat markdown for readability (don’t change meaning).
+ Fix typos and grammar in public documentation and UI tooltips. For any maintainer-only or archived documents, contact the project owner.
+ Add or expand inline examples or `// TODO` anchors in `FadedBalancerOFX.dctl` and public docs.
+ Normalize example float literals in code comments and public docs to include `f` (don’t change runtime constants without approval).
+ Add or update short acceptance steps in `CONTRIBUTING.md` (keep test semantics the same) or contact the project owner for private test archives.
+ Reformat markdown for readability (don’t change meaning).
 
 ## Changes that require owner approval
 Obtain approval from the repo owner (see `README.md` for contact) before making:
@@ -48,7 +48,7 @@ NOTE: testing is visual/manual; there is no automated build step.
 
 ## PR checklist
 - [ ] Title: short, descriptive (e.g., `fix: preserve-luma edge-case`)
- - [ ] Body: summary, files changed, acceptance tests performed (link to `docs/TESTS.md` steps if public), and before/after images.
+ - [ ] Body: summary, files changed, acceptance tests performed (refer to `CONTRIBUTING.md`'s test steps or contact the project owner), and before/after images.
 - [ ] Docs updated if public behavior changed.
 - [ ] Tag owner / request review from the author listed in `README.md` for any behavioral changes.
 

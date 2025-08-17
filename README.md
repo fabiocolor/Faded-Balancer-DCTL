@@ -2,7 +2,7 @@
 
 A DaVinci Resolve DCTL OFX plugin focused on corrective balancing of faded / dye-shifted film scans. It provides precise, minimal, and invertible channel tools (global + per-channel LGGH, min/max mixing, replace, removal, optional Cineon log inspection) to neutralize classic magenta / purple casts without imposing a stylized look.
 
-Synopsis: A quick, conservative corrective pass for faded chromogenic film scans — use presets and the Fade Correction scalar to recover midtone contrast and rebalance neutral drift, then refine with per-channel controls. See `docs/FAQ.md` for a short quickstart and a visual scope checklist for verification.
+Synopsis: A quick, conservative corrective pass for faded chromogenic film scans — use presets and the Fade Correction scalar to recover midtone contrast and rebalance neutral drift, then refine with per-channel controls. See the project FAQ for a short quickstart and a visual scope checklist for verification.
 
 ---
 

@@ -78,7 +78,7 @@ DEFINE_UI_PARAMS(outputToCineon, 🎞️ Output to Cineon Log, DCTLUI_CHECK_BOX,
 
 // === HELPERS ===
 
-// TODO (docs/examples): small, safe examples for editors/AI agents.
+// TODO (examples): small, safe examples for editors/AI agents.
 // These are non-functional comments to show typical patterns used in this file.
 // 1) Midtones (gamma) example using safe_pow (use in a local transform or helper):
 //    // make midtones vector from a single UI slider

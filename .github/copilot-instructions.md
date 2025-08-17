@@ -5,7 +5,7 @@ test, and extend `FadedBalancerOFX.dctl` safely and quickly.
 
 Quick facts
 - Single-file DCTL: `FadedBalancerOFX.dctl` is the canonical source (entry: `__DEVICE__ float3|float4 transform(...)`).
-- Primary public docs: `README.md`, `docs/FAQ.md`, `CONTRIBUTING.md` — treat these and the DCTL as the agent's authoritative public sources when editing.
+- Primary public docs: `README.md`, `CONTRIBUTING.md` — treat these and the DCTL as the agent's authoritative public sources when editing.
 - No build: test by copying the `.dctl` into Resolve's LUT/DCTL folder and restarting Resolve.
 - Private maintainer guidance and helper snippets are available to the project owner/maintainers.
 
