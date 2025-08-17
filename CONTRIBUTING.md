@@ -42,7 +42,7 @@ Obtain approval from the repo owner (see `README.md` for contact) before making:
    - Windows: `C:\ProgramData\Blackmagic Design\DaVinci Resolve\Support\LUT\`
 2. Restart DaVinci Resolve.
 3. In the Color page, add a DCTL effect to a node and select `FadedBalancerOFX`.
-4. Use scopes (RGB parade, histogram, waveform) to verify behavior described in the private maintainer archive (`internal/ARCHIVE_DOCS.md`).
+4. Use scopes (RGB parade, histogram, waveform) to verify behavior; contact the owner for any maintainer-only verification steps.
 
 NOTE: testing is visual/manual; there is no automated build step.
 

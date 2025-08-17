@@ -16,7 +16,7 @@ Synopsis: A quick, conservative corrective pass for faded chromogenic film scans
 #### What's New in v1.3.0
 - Added `Preserve Luminance` (⚖) – normalizes luma after per-channel stage only (global adjustments still shift exposure).
 - Renamed channel "Copy" operations to clearer **Replace** (e.g. "Replace Red → With Green").
-- Processing order is canonical; see `docs/SPECIFICATION.md#authoritative-pipeline` for the authoritative pipeline and invariants.
+- Processing order is canonical and should not be changed without owner approval.
 - Consolidated UI/label/icon overhaul (option text simplification, Darken/Lighten composite combos, consistent icon set, duplicate definitions removed).
 
 #### What's New in v1.2.0
