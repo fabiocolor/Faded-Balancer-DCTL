@@ -12,14 +12,14 @@ Must-follow rules (do not change without owner approval)
 - Pipeline ordering is authoritative; do not change it without owner approval.
 - Do not rename or change `DEFINE_UI_PARAMS` identifiers or numeric ranges.
 - No runtime state, no variable-bound loops, and only vendor intrinsics (`_powf`, `_fminf`, `_fmaxf`, `_clampf`, `_log10f`, etc.).
-- Always validate any DCTL code or suggestions against the official vendor documentation in `docs/vendor/bmd-dctl/README.md` before applying — that file is authoritative for supported intrinsics, transform signatures, and UI control definitions.
+-- Always validate any DCTL code or suggestions against the official vendor documentation; contact the project owner for the maintainer-curated vendor reference if needed — the owner maintains a private copy for maintainers.
 
 Concrete, copy-paste patterns
 - Entry signature example: `__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B)`.
 - Midtones (gamma): `out = _powf(in, 1.0f / midtones);` (midtones ~ [0.1f..3.0f]).
 - Preserve luminance: compute Rec.709 Y `0.2126f*R + 0.7152f*G + 0.0722f*B` before per-channel edits and rescale after when enabled.
 - Mixing: use `_fminf` / `_fmaxf` for Darken/Lighten (no weighted blends).
-- Use `safe_pow(base, exp)` (clamp base ≥ 1e-9f). Contact the repository owner for maintainer helper snippets.
+-- Use `safe_pow(base, exp)` (clamp base ≥ 1e-9f). Contact the repository owner for maintainer helper snippets.
 
 Files to update together when changing runtime behavior
 - `FadedBalancerOFX.dctl` (and notify the repository owner for maintainer notes).

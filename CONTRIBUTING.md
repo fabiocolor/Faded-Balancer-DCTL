@@ -53,12 +53,12 @@ NOTE: testing is visual/manual; there is no automated build step.
 - [ ] Tag owner / request review from the author listed in `README.md` for any behavioral changes.
 
 ## Upstream spec sync
-The official Blackmagic Design DCTL reference is vendored at `docs/vendor/bmd-dctl/README.md` (do not modify it directly). When:
+The official Blackmagic Design DCTL reference is available to maintainers; contact the project owner for access to the maintainer-curated vendor reference (do not modify upstream files directly). When:
 - Adding or using a new intrinsic
 - Changing the transform function signature (float3 vs float4)
 - Adjusting UI macro usage (`DEFINE_UI_PARAMS`, potential tooltips)
 
-You must confirm the construct exists in the upstream spec. If Blackmagic updates their spec and it affects this plugin, add a short note in your PR body: `Upstream spec sync: <YYYY-MM-DD>` describing what changed. Optionally summarize new relevant intrinsics in `docs/vendor/bmd-dctl/summary.md` (create/update) so future contributors have a quick diff without scanning the large upstream file.
+You must confirm the construct exists in the upstream spec. If Blackmagic updates their spec and it affects this plugin, add a short note in your PR body: `Upstream spec sync: <YYYY-MM-DD>` describing what changed. For maintainer-curated vendor notes, contact the project owner.
 
 If an intrinsic you want is missing upstream, open an issue instead of guessing — unsupported intrinsics can silently fail inside Resolve.
 
