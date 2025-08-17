@@ -2,12 +2,10 @@
 // Corrective RGB rebalance for faded / color‑shifted film scans.
 //
 // Important (human-friendly): this file contains short, plain-language explanations
-// targeted at colorists and film-restoration practitioners. Those explanations and
-// the UI tooltips in this file point to the private background reference that
-// explains the physical and colorimetric reasoning behind the algorithm:
-//   internal/BACKGROUND_FILM_FADING.md
-// Read that background doc first to understand why certain UI controls exist and
-// how presets are designed for common faded Eastman/Fuji behaviors.
+// targeted at colorists and film-restoration practitioners. Maintainer-only
+// background research is private; contact the project owner for maintainer notes
+// when deeper rationale is required. Public documentation is intentionally
+// minimal and does not link to private research.
 //
 // Pipeline (per-pixel): 
 //   1) Optional PRESET pre-transform (apply film-stock suggestions to the original pixel)
@@ -107,9 +105,8 @@ DEFINE_UI_TOOLTIP(globalMidtones, "Global midtone gamma. Small changes rebalance
 // HELPERS (plain-language explanations)
 // The helper functions below are small, GPU-safe building blocks. Each has a
 // short, non-technical description for colorists so you can reason about
-// what the operation does without needing to read GPU code. For the physical
-// rationale (dye decay, density scaling, and neutral re-alignment) refer to
-// internal/BACKGROUND_FILM_FADING.md.
+// what the operation does without needing to read GPU code. For deeper,
+// maintainer-only rationale contact the project owner (private notes).
 
 // Developer mapping: which helper relates to which section in the background doc
 // - safe_pow             -> "Power-Law (Per-Channel Gamma / Exponent)"
@@ -149,8 +146,8 @@ __DEVICE__ float3 applyLGGO(float3 col, float3 offset, float3 shadows, float3 mi
 // Friendly summary: a gentle contrast and saturation nudge tuned for faded
 // materials. Faded film often needs a midtone contrast lift and a subtle
 // saturation recovery; this function implements that behavior and re-scales
-// the result to preserve perceived brightness. See internal/BACKGROUND_FILM_FADING.md
-// for background on why this specific shaping helps faded chromogenic prints.
+// the result to preserve perceived brightness. Contact the project owner for
+// maintainer-only background notes that explain the shaping in detail.
 __DEVICE__ float3 applyFadeCorrection(float3 col, float fadeCorrection) {
     if (fadeCorrection > 0.0f) {
         float luma = col.x * 0.2126f + col.y * 0.7152f + col.z * 0.0722f;

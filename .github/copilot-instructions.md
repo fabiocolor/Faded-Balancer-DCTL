@@ -9,7 +9,7 @@ Quick facts
 - Private maintainer guidance and helper snippets are available to the project owner/maintainers. Contact the repository owner for access to maintainer documentation.
 
 Must-follow rules (do not change without owner approval)
-- Pipeline ordering is authoritative: see `docs/SPECIFICATION.md#authoritative-pipeline`.
+- Pipeline ordering is authoritative; do not change it without owner approval.
 - Do not rename or change `DEFINE_UI_PARAMS` identifiers or numeric ranges.
 - No runtime state, no variable-bound loops, and only vendor intrinsics (`_powf`, `_fminf`, `_fmaxf`, `_clampf`, `_log10f`, etc.).
 - Always validate any DCTL code or suggestions against the official vendor documentation in `docs/vendor/bmd-dctl/README.md` before applying — that file is authoritative for supported intrinsics, transform signatures, and UI control definitions.
@@ -22,7 +22,7 @@ Concrete, copy-paste patterns
 - Use `safe_pow(base, exp)` (clamp base ≥ 1e-9f). Contact the repository owner for maintainer helper snippets.
 
 Files to update together when changing runtime behavior
-- `FadedBalancerOFX.dctl`, `docs/SPECIFICATION.md`, `docs/API.md` (and notify the repository owner for maintainer notes).
+- `FadedBalancerOFX.dctl` (and notify the repository owner for maintainer notes).
 
 Testing & validation (manual)
 - Install test: copy `.dctl` to Resolve LUT/DCTL folder and restart.

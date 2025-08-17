@@ -1,6 +1,6 @@
 # Faded Balancer — FAQ for Colorists & Restoration Artists
 
-This short FAQ explains what `FadedBalancerOFX.dctl` does, when to use it, and practical tips for working with faded chromogenic film scans. For in-depth, technical background (dye chemistry, kinetics, and archival methods) see the private developer reference `internal/BACKGROUND_FILM_FADING.md`.
+This short FAQ explains what `FadedBalancerOFX.dctl` does, when to use it, and practical tips for working with faded chromogenic film scans. For in-depth technical background or maintainer-only notes, contact the project owner.
 
 Q: What is FadedBalancer?
 A: A single-file DCTL shader that helps rebalance color and recover midtone contrast in faded film scans. It offers presets for common faded stocks plus global and per-channel controls so you can target neutral drift (commonly magenta/pink casts) and recover natural-looking neutrals.
@@ -30,7 +30,7 @@ Q: How do I install and test?
 - On a neutral chart or known gray patch, verify the neutral axis moves toward neutral without clipping.
 
 Q: Want deeper rationale?
-- Maintainers and restorers can read the private background reference: `internal/BACKGROUND_FILM_FADING.md`.
+- Maintainer-only background research is private; contact the project owner for access.
 
 ### Quick visual checklist (use scopes)
 Follow these quick checks after you make adjustments to confirm a safe correction:
