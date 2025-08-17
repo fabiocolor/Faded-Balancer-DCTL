@@ -6,12 +6,12 @@ Please keep changes small, reversible, and well-documented.
 
 ## Quick checklist for PRs
 - Update code in `FadedBalancerOFX.dctl` only when necessary.
-- Update docs in `docs/` that correspond to behavioral changes (`SPECIFICATION.md`, `API.md`). For detailed developer guidance and tests, contact the repository owner for access to maintainer documentation.
+ - Update public docs that correspond to behavioral changes. For detailed developer guidance, private tests, and maintainer-only archives, contact the repository owner for access and approval.
 - Include before/after screenshots and RGB parade scope images for any visual change.
 - Describe behavioral changes and list acceptance tests you used. If you need maintainer-only acceptance steps, contact the repository owner.
 
 ## DCTL-specific rules (must follow)
-- Keep the canonical pipeline order (see `docs/SPECIFICATION.md#authoritative-pipeline`) when making changes.
+ - Keep the canonical pipeline order when making changes; contact the project owner if you need the authoritative pipeline.
 - UI controls must be declared with `DEFINE_UI_PARAMS` and their variable names must match the names used in `transform()`.
 - Float literals must end with `f` (e.g., `0.5f`).
 - Use only Resolve/DCTL intrinsics (`_powf`, `_fminf`, `_fmaxf`, `_clampf`, etc.).
@@ -48,7 +48,7 @@ NOTE: testing is visual/manual; there is no automated build step.
 
 ## PR checklist
 - [ ] Title: short, descriptive (e.g., `fix: preserve-luma edge-case`)
-- [ ] Body: summary, files changed, acceptance tests performed (link to `docs/TESTS.md` steps), and before/after images.
+ - [ ] Body: summary, files changed, acceptance tests performed (link to `docs/TESTS.md` steps if public), and before/after images.
 - [ ] Docs updated if public behavior changed.
 - [ ] Tag owner / request review from the author listed in `README.md` for any behavioral changes.
 

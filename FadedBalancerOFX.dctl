@@ -91,9 +91,8 @@ DEFINE_UI_PARAMS(outputToCineon, 🎞️ Output to Cineon Log, DCTLUI_CHECK_BOX,
 // Notes: Keep comments as examples only — do not change pipeline order or UI names.
 
 // Optional UI tooltips (Resolve 19.1+). These are enabled below to show concise,
-// user-facing guidance for colorists. They are intentionally brief—read the
-// private background reference for full rationale:
-//   internal/BACKGROUND_FILM_FADING.md
+// user-facing guidance for colorists. They are intentionally brief—contact the
+// project owner for maintainer-only background rationale.
 // Enable these to expose short-help in the DCTL UI (uncommented on purpose):
 DEFINE_UI_TOOLTIP(fadeCorrection, "Soft contrast & saturation boost for faded scans. Contact project owner for maintainer notes.")
 DEFINE_UI_TOOLTIP(preserveLuminance, "Rescale RGB after per-channel work to keep perceived brightness. Contact project owner for maintainer notes.")
@@ -108,12 +107,12 @@ DEFINE_UI_TOOLTIP(globalMidtones, "Global midtone gamma. Small changes rebalance
 // what the operation does without needing to read GPU code. For deeper,
 // maintainer-only rationale contact the project owner (private notes).
 
-// Developer mapping: which helper relates to which section in the background doc
-// - safe_pow             -> "Power-Law (Per-Channel Gamma / Exponent)"
-// - applyLGGO            -> "3×3 Color Matrix / Per-Channel Gain-Bias" (tonal pass & per-channel tweaks)
-// - applyFadeCorrection  -> "Practical, Invertible Correction Strategies" (soft contrast & saturation recovery)
-// - linearToCineon       -> "Practical Notes / Output Inspection" (simple film-log inspection)
-// These pointers help maintainers find the conceptual rationale quickly.
+// Developer mapping: which helper relates to conceptual ideas (maintainer-only).
+// - safe_pow             -> Power-law / per-channel gamma
+// - applyLGGO            -> Offset/Shadows/Midtones/Highlights pattern
+// - applyFadeCorrection  -> Soft contrast & saturation recovery pattern
+// - linearToCineon       -> Film-log / inspection helper
+// Contact the project owner for exact background section mappings.
 
 // safe_pow: safe per-channel gamma/exponentiation. Use this when changing
 // midtones so that extremely dark pixels don't produce math errors. In practice
@@ -146,8 +145,7 @@ __DEVICE__ float3 applyLGGO(float3 col, float3 offset, float3 shadows, float3 mi
 // Friendly summary: a gentle contrast and saturation nudge tuned for faded
 // materials. Faded film often needs a midtone contrast lift and a subtle
 // saturation recovery; this function implements that behavior and re-scales
-// the result to preserve perceived brightness. Contact the project owner for
-// maintainer-only background notes that explain the shaping in detail.
+// the result to preserve perceived brightness.
 __DEVICE__ float3 applyFadeCorrection(float3 col, float fadeCorrection) {
     if (fadeCorrection > 0.0f) {
         float luma = col.x * 0.2126f + col.y * 0.7152f + col.z * 0.0722f;
