@@ -30,7 +30,7 @@ Q: How do I install and test?
 - On a neutral chart or known gray patch, verify the neutral axis moves toward neutral without clipping.
 
 Q: Want deeper rationale?
-- Maintainer-only background research is private; contact the project owner for access.
+- See the maintainer archive for in-depth background (maintainers only).
 
 ### Quick visual checklist (use scopes)
 Follow these quick checks after you make adjustments to confirm a safe correction:
