@@ -6,9 +6,9 @@ Please keep changes small, reversible, and well-documented.
 
 ## Quick checklist for PRs
 - Update code in `FadedBalancerOFX.dctl` only when necessary.
-- Update docs in `docs/` that correspond to behavioral changes (`SPECIFICATION.md`, `API.md`, `CODING_GUIDE.md`, `TESTS.md`, `EDGECASES.md`).
+- Update docs in `docs/` that correspond to behavioral changes (`SPECIFICATION.md`, `API.md`). For developer guidance and tests consult `internal/ARCHIVE_DOCS.md` (private).
 - Include before/after screenshots and RGB parade scope images for any visual change.
-- Describe behavioral changes and list acceptance tests you used from `docs/TESTS.md`.
+- Describe behavioral changes and list acceptance tests you used from the internal archive (`internal/ARCHIVE_DOCS.md`).
 
 ## DCTL-specific rules (must follow)
 - Keep the canonical pipeline order (see `docs/SPECIFICATION.md#authoritative-pipeline`) when making changes.
@@ -42,7 +42,7 @@ Obtain approval from the repo owner (see `README.md` for contact) before making:
    - Windows: `C:\ProgramData\Blackmagic Design\DaVinci Resolve\Support\LUT\`
 2. Restart DaVinci Resolve.
 3. In the Color page, add a DCTL effect to a node and select `FadedBalancerOFX`.
-4. Use scopes (RGB parade, histogram, waveform) to verify behavior described in `docs/TESTS.md`.
+4. Use scopes (RGB parade, histogram, waveform) to verify behavior described in the private maintainer archive (`internal/ARCHIVE_DOCS.md`).
 
 NOTE: testing is visual/manual; there is no automated build step.
 

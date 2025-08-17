@@ -1,50 +1,39 @@
-## Purpose
-Give an AI coding agent short, actionable knowledge to edit, test, and extend `FadedBalancerOFX.dctl` safely and quickly.
+## Copilot / AI agent instructions — FadedBalancerOFX (concise)
 
-## Quick facts
-- Single-file DCTL plugin: `FadedBalancerOFX.dctl` (entry: `__DEVICE__ float3|float4 transform(...)`).
-- Primary docs: `docs/SPECIFICATION.md`, `docs/API.md`, `docs/CODING_GUIDE.md`, `docs/TESTS.md`, `docs/EDGECASES.md`, and `README.md`.
-- No build system: plugin runs inside DaVinci Resolve. Install by copying `FadedBalancerOFX.dctl` to Resolve LUT/DCTL folder (see README.md Install section).
+Purpose: give an AI coding agent the exact, repo-specific facts needed to edit,
+test, and extend `FadedBalancerOFX.dctl` safely and quickly.
 
-## Resolve LUT / DCTL common install locations (check your Resolve version)
-- macOS (user): `~/Library/Application Support/Blackmagic Design/DaVinci Resolve/LUT/DCTL`
-- macOS (system): `/Library/Application Support/Blackmagic Design/DaVinci Resolve/LUT/DCTL`
-- Windows (user): `C:\Users\<you>\AppData\Roaming\Blackmagic Design\DaVinci Resolve\LUT\DCTL` (or `%APPDATA%\Blackmagic Design\DaVinci Resolve\LUT\DCTL`)
-- Windows (system): `C:\ProgramData\Blackmagic Design\DaVinci Resolve\LUT\DCTL`
-- Linux (typical installs): `/opt/resolve/share/resolve/LUT/DCTL` or check `~/.local/share/DaVinciResolve` depending on distro and install method
+Quick facts
+- Single-file DCTL: `FadedBalancerOFX.dctl` is the canonical source (entry: `__DEVICE__ float3|float4 transform(...)`).
+- No build: test by copying the `.dctl` into Resolve's LUT/DCTL folder and restarting Resolve.
+- Private maintainers docs: `internal/ARCHIVE_DOCS.md` and `internal/DCTL_HELPERS.md` (git-ignored) hold extended guidance and snippets.
 
-Always verify the exact folder for your Resolve version — or consult `docs/vendor/bmd-dctl/README.md` (authoritative vendor guidance bundled in this repo).
+Must-follow rules (do not change without owner approval)
+- Pipeline ordering is authoritative: see `docs/SPECIFICATION.md#authoritative-pipeline`.
+- Do not rename or change `DEFINE_UI_PARAMS` identifiers or numeric ranges.
+- No runtime state, no variable-bound loops, and only vendor intrinsics (`_powf`, `_fminf`, `_fmaxf`, `_clampf`, `_log10f`, etc.).
+- Always validate any DCTL code or suggestions against the official vendor documentation in `docs/vendor/bmd-dctl/README.md` before applying — that file is authoritative for supported intrinsics, transform signatures, and UI control definitions.
 
-## What matters (high level)
-- The repo is a single-pass per-pixel transformer (shader-like). The DCTL is source-of-truth: behavior, UI params and helpers live in `FadedBalancerOFX.dctl`.
-- Pipeline order is canonical; see `docs/SPECIFICATION.md#authoritative-pipeline` for the full, authoritative order and rules.
-- ALWAYS open and reference `docs/vendor/bmd-dctl/README.md` when correcting code or generating new DCTL: it documents supported intrinsics, entry signatures, and UI control forms that must be followed.
+Concrete, copy-paste patterns
+- Entry signature example: `__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B)`.
+- Midtones (gamma): `out = _powf(in, 1.0f / midtones);` (midtones ~ [0.1f..3.0f]).
+- Preserve luminance: compute Rec.709 Y `0.2126f*R + 0.7152f*G + 0.0722f*B` before per-channel edits and rescale after when enabled.
+- Mixing: use `_fminf` / `_fmaxf` for Darken/Lighten (no weighted blends).
+- Use `safe_pow(base, exp)` (clamp base ≥ 1e-9f) — see `internal/DCTL_HELPERS.md`.
 
-## Developer workflow (concrete steps)
-1. Edit `FadedBalancerOFX.dctl` in-place. Keep `DEFINE_UI_PARAMS(...)` names and the variables in `transform()` consistent.
-2. Quick local checks: ensure float literals have `f` suffix (e.g., `0.001f`) and only vendor intrinsics are used (`_powf`, `_fminf`, `_fmaxf`, `_clampf`, `_log10f`, etc.).
-3. Manual test: copy `.dctl` to Resolve LUT/DCTL folder, restart Resolve, add a DCTL node, and use RGB parade/histogram and numeric readouts as described in `docs/TESTS.md`.
+Files to update together when changing runtime behavior
+- `FadedBalancerOFX.dctl`, `docs/SPECIFICATION.md`, `docs/API.md` (and update `internal/ARCHIVE_DOCS.md` for developer notes).
 
-## Project-specific conventions & examples
-- UI params: declared with `DEFINE_UI_PARAMS` and must match names referenced inside `transform()`.
-  Example: if `DEFINE_UI_PARAMS` declares `float globalMidtones`, `transform()` must use `globalMidtones`.
-- Midtones = gamma exponent. Use: `out = _powf(in, 1.0f / midtones);` (keep midtones roughly in [0.1..3.0]).
-- Preserve luminance: compute Rec.709 Y (0.2126 * R + 0.7152 * G + 0.0722 * B) before per-channel edits and rescale RGB afterward to restore Y.
-- Mixing: implement Darken/Lighten purely with `_fminf` / `_fmaxf` (no weighted blends).
-- No final clamp: the plugin intentionally allows values outside [0..1]; do not add a global `_clampf` unless requested.
-- Helpers in the code: `safe_pow(...)` (domain guard), `applyLGGO(...)` (Offset→Shadows→Midtones→Highlights), `linearToCineon(...)` — refer to their implementations for correct usage.
+Testing & validation (manual)
+- Install test: copy `.dctl` to Resolve LUT/DCTL folder and restart.
+- Quick smoke: default UI on a neutral patch should be identity (per-channel diff ≲ 1e-4).
+- Functional checks: small midtone edits must move RGB parade predictably; `preserveLuminance` keeps Y within ~1e-3.
 
-## Changes an AI should avoid without approval
-- Do not change pipeline order, rename UI controls, or change numeric ranges in `DEFINE_UI_PARAMS` without owner approval.
-- Do not introduce runtime state, variable-bound loops, or non-vendor intrinsics.
-- Do not add a final global clamp (design choice).
+PR hints
+- Commit messages: concise, e.g. `chore(docs): ...`, `fix(dctl): ...`, `feat(dctl): ...`.
+- For behavioral changes include before/after images and scope screenshots in PR descriptions.
 
-## Files to update together when changing behavior
-- `FadedBalancerOFX.dctl`
-- `docs/SPECIFICATION.md`, `docs/API.md`, `docs/CODING_GUIDE.md`, `docs/TESTS.md`, `docs/EDGECASES.md`
+If unsure
+- If an edit touches pipeline order, UI names/ranges, or output mapping, ask the repo owner (see `README.md`) before committing.
 
-## Good small edits an AI may make
-- Fix grammar/typos in docs, normalize `f` suffixes in comments, add short inline examples or `// TODO` anchors, and improve doc clarity.
-
-## When to ask for clarification
-- Ask the repo owner (see `README.md`) before modifying pipeline order, UI labels/ranges, or output mapping behavior (Cineon/Linear handling).
+End of concise instructions.
