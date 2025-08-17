@@ -92,16 +92,15 @@ DEFINE_UI_PARAMS(outputToCineon, 🎞️ Output to Cineon Log, DCTLUI_CHECK_BOX,
 //    rgb.x = _fminf(rgb.x, rgb.y); // red = min(red, green)
 // Notes: Keep comments as examples only — do not change pipeline order or UI names.
 
-// Optional UI tooltips (Resolve 19.1+). These are shown as examples and are commented out
-// to avoid changing runtime behavior. Uncomment to enable tooltips in the DCTL UI.
-// The tooltip text below is written for colorists/restoration artists and points to
-// the private background reference for deeper reading. These strings explain the
-// control in plain language (why it's useful and when to change it).
-// Example usage:
-// DEFINE_UI_TOOLTIP(fadeCorrection, "Soft contrast & saturation boost for faded film scans. See internal/BACKGROUND_FILM_FADING.md for why this helps faded Eastman/Fuji negatives.")
-// DEFINE_UI_TOOLTIP(preserveLuminance, "Rescale RGB after per-channel adjustments to keep perceived brightness. Helpful when removing magenta casts; see internal/BACKGROUND_FILM_FADING.md.")
-// DEFINE_UI_TOOLTIP(outputToCineon, "Encode per-channel linear→Cineon log for inspection (no gamut or matrix ops). Useful for film-log inspection — background notes in internal/BACKGROUND_FILM_FADING.md.")
-// DEFINE_UI_TOOLTIP(globalMidtones, "Global midtones (gamma). Use to shift midtone contrast—small changes can rebalance faded palettes. See internal/BACKGROUND_FILM_FADING.md for examples and safe ranges.")
+// Optional UI tooltips (Resolve 19.1+). These are enabled below to show concise,
+// user-facing guidance for colorists. They are intentionally brief—read the
+// private background reference for full rationale:
+//   internal/BACKGROUND_FILM_FADING.md
+// Enable these to expose short-help in the DCTL UI (uncommented on purpose):
+DEFINE_UI_TOOLTIP(fadeCorrection, "Soft contrast & saturation boost for faded scans. See internal/BACKGROUND_FILM_FADING.md.")
+DEFINE_UI_TOOLTIP(preserveLuminance, "Rescale RGB after per-channel work to keep perceived brightness. See internal/BACKGROUND_FILM_FADING.md.")
+DEFINE_UI_TOOLTIP(outputToCineon, "Simple Cineon-style log output for film inspection. See internal/BACKGROUND_FILM_FADING.md.")
+DEFINE_UI_TOOLTIP(globalMidtones, "Global midtone gamma. Small changes rebalance faded palettes. See internal/BACKGROUND_FILM_FADING.md.")
 
 
 
@@ -111,6 +110,13 @@ DEFINE_UI_PARAMS(outputToCineon, 🎞️ Output to Cineon Log, DCTLUI_CHECK_BOX,
 // what the operation does without needing to read GPU code. For the physical
 // rationale (dye decay, density scaling, and neutral re-alignment) refer to
 // internal/BACKGROUND_FILM_FADING.md.
+
+// Developer mapping: which helper relates to which section in the background doc
+// - safe_pow             -> "Power-Law (Per-Channel Gamma / Exponent)"
+// - applyLGGO            -> "3×3 Color Matrix / Per-Channel Gain-Bias" (tonal pass & per-channel tweaks)
+// - applyFadeCorrection  -> "Practical, Invertible Correction Strategies" (soft contrast & saturation recovery)
+// - linearToCineon       -> "Practical Notes / Output Inspection" (simple film-log inspection)
+// These pointers help maintainers find the conceptual rationale quickly.
 
 // safe_pow: safe per-channel gamma/exponentiation. Use this when changing
 // midtones so that extremely dark pixels don't produce math errors. In practice
