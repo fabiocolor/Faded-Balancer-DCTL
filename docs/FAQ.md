@@ -32,10 +32,6 @@ Q: How do I install and test?
 Q: Want deeper rationale?
 - Maintainers and restorers can read the private background reference: `internal/BACKGROUND_FILM_FADING.md`.
 
-If you want this FAQ trimmed, extended, or copied into a short README section for end-users, tell me which parts to expand or simplify.
-
----
-
 ### Quick visual checklist (use scopes)
 Follow these quick checks after you make adjustments to confirm a safe correction:
 
@@ -43,5 +39,3 @@ Follow these quick checks after you make adjustments to confirm a safe correctio
 - Luma preservation: If `Preserve Luminance` is enabled, overall perceived brightness (monitor or waveform) should remain similar before/after per-channel tweaks.
 - Shadows: Check parade shadows for noise spikes after aggressive boosts — reduce shadow gain if noise is amplified.
 - Highlights: Use the Cineon inspection toggle to ensure highlights do not clip in log space before committing stronger highlight boosts.
-
-Add screenshots here later to illustrate each check (suggested places: neutral patch vectorscope, RGB parade before/after, Cineon highlight view).
