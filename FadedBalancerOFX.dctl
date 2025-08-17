@@ -20,7 +20,7 @@
 // - "Preserve Luminance" rescales RGB after per-channel work so that perceived
 //   brightness stays similar — useful when rebalancing channels to remove magenta
 //   casts. See the background doc for guidance on when to enable this.
-// - Presets are non-destructive suggestions applied only to internal copies before
+// - Presets are non-destructive suggestions applied only to local copies before
 //   processing; they give a good starting point for known faded stocks but do not
 //   overwrite Inspector sliders. See the background doc for the stock notes.
 //
