@@ -1,5 +1,14 @@
 // FadedBalancerOFX v1.3.1
 // Corrective RGB rebalance for faded / color‑shifted film scans.
+//
+// Important (human-friendly): this file contains short, plain-language explanations
+// targeted at colorists and film-restoration practitioners. Those explanations and
+// the UI tooltips in this file point to the private background reference that
+// explains the physical and colorimetric reasoning behind the algorithm:
+//   internal/BACKGROUND_FILM_FADING.md
+// Read that background doc first to understand why certain UI controls exist and
+// how presets are designed for common faded Eastman/Fuji behaviors.
+//
 // Pipeline (per-pixel): 
 //   1) Optional PRESET pre-transform (apply film-stock suggestions to the original pixel)
 //   2) Global adjustments (Offset / Shadows / Midtones / Highlights)
@@ -9,10 +18,13 @@
 //   6) Channel copy/replace
 //   7) Channel removal & final output mapping (optional Cineon)
 //
-// Notes:
-// - PreserveLuminance affects only the Per-channel stage (step 4).
-// - Presets are non-destructive suggestions applied to the pixel before global adjustments.
-// - UI slider values remain editable; presets do not write back to the Inspector.
+// Notes for colorists:
+// - "Preserve Luminance" rescales RGB after per-channel work so that perceived
+//   brightness stays similar — useful when rebalancing channels to remove magenta
+//   casts. See the background doc for guidance on when to enable this.
+// - Presets are non-destructive suggestions applied only to internal copies before
+//   processing; they give a good starting point for known faded stocks but do not
+//   overwrite Inspector sliders. See the background doc for the stock notes.
 //
 #// --- Preset identifiers & selector (Eastman Color 1 / Eastman Color 2 / Eastman Color 3..5)
 #define PRESET_NONE      0
@@ -82,19 +94,35 @@ DEFINE_UI_PARAMS(outputToCineon, 🎞️ Output to Cineon Log, DCTLUI_CHECK_BOX,
 
 // Optional UI tooltips (Resolve 19.1+). These are shown as examples and are commented out
 // to avoid changing runtime behavior. Uncomment to enable tooltips in the DCTL UI.
+// The tooltip text below is written for colorists/restoration artists and points to
+// the private background reference for deeper reading. These strings explain the
+// control in plain language (why it's useful and when to change it).
 // Example usage:
-// DEFINE_UI_TOOLTIP(fadeCorrection, "Soft contrast & saturation boost for faded film scans.")
-// DEFINE_UI_TOOLTIP(preserveLuminance, "Rescale RGB after per-channel adjustments to preserve Rec.709 luma.")
-// DEFINE_UI_TOOLTIP(outputToCineon, "Encode per-channel linear→Cineon log for inspection (no gamut or matrix ops).")
-// DEFINE_UI_TOOLTIP(globalMidtones, "Global midtones (gamma). Keep in range ~[0.1f..3.0f] to avoid unstable pow().")
+// DEFINE_UI_TOOLTIP(fadeCorrection, "Soft contrast & saturation boost for faded film scans. See internal/BACKGROUND_FILM_FADING.md for why this helps faded Eastman/Fuji negatives.")
+// DEFINE_UI_TOOLTIP(preserveLuminance, "Rescale RGB after per-channel adjustments to keep perceived brightness. Helpful when removing magenta casts; see internal/BACKGROUND_FILM_FADING.md.")
+// DEFINE_UI_TOOLTIP(outputToCineon, "Encode per-channel linear→Cineon log for inspection (no gamut or matrix ops). Useful for film-log inspection — background notes in internal/BACKGROUND_FILM_FADING.md.")
+// DEFINE_UI_TOOLTIP(globalMidtones, "Global midtones (gamma). Use to shift midtone contrast—small changes can rebalance faded palettes. See internal/BACKGROUND_FILM_FADING.md for examples and safe ranges.")
 
 
 
-// safe_pow: avoid domain errors by clamping base to a small positive value.
-// Uses _powf for GPU-friendly exp.
+// HELPERS (plain-language explanations)
+// The helper functions below are small, GPU-safe building blocks. Each has a
+// short, non-technical description for colorists so you can reason about
+// what the operation does without needing to read GPU code. For the physical
+// rationale (dye decay, density scaling, and neutral re-alignment) refer to
+// internal/BACKGROUND_FILM_FADING.md.
+
+// safe_pow: safe per-channel gamma/exponentiation. Use this when changing
+// midtones so that extremely dark pixels don't produce math errors. In practice
+// this implements the power-law correction described in the background doc.
+// Uses _powf for GPU-friendly exp and clamps the base to a tiny positive value.
 __DEVICE__ float safe_pow(float x, float y) { return _powf(_fmaxf(x, 1e-9f), y); }
 
-// applyLGGO: simple pipeline helper that applies Offset -> Shadows -> Midtones (gamma) -> Highlights (gain).
+// applyLGGO: Friendly description: "Offset, Shadows, Midtones, Highlights"
+// A simple, tonal-pass helper that applies small additive offsets (useful to fix
+// color casts in shadows), a shadow lift, a midtone gamma, and a highlight gain.
+// This mirrors the common colorist workflow: lift, gamma, gain. See the
+// background doc for why per-channel midtone exponents are used for faded film.
 // Parameters:
 //   col       - input color
 //   offset    - per-channel additive offset
@@ -112,8 +140,11 @@ __DEVICE__ float3 applyLGGO(float3 col, float3 offset, float3 shadows, float3 mi
 }
 
 // applyFadeCorrection:
-// - soft contrast & saturation boost that can be mixed via fadeCorrection [0..1].
-// - preserves overall luminance by re-scaling to the target finalLuma.
+// Friendly summary: a gentle contrast and saturation nudge tuned for faded
+// materials. Faded film often needs a midtone contrast lift and a subtle
+// saturation recovery; this function implements that behavior and re-scales
+// the result to preserve perceived brightness. See internal/BACKGROUND_FILM_FADING.md
+// for background on why this specific shaping helps faded chromogenic prints.
 __DEVICE__ float3 applyFadeCorrection(float3 col, float fadeCorrection) {
     if (fadeCorrection > 0.0f) {
         float luma = col.x * 0.2126f + col.y * 0.7152f + col.z * 0.0722f;
@@ -132,8 +163,10 @@ __DEVICE__ float3 applyFadeCorrection(float3 col, float fadeCorrection) {
 }
 
 // linearToCineon: converts a linear value to Cineon-style log range.
-// Negative or zero input is clamped to 0.0 to avoid NaNs/infinities on GPU.
-// (Keep this simple — if you need exact Cineon film-formula mapping, we can replace with a tested reference.)
+// Friendly summary: outputs a simple film-log representation useful for film
+// inspection and matching. Negative or zero input is clamped to 0.0 to avoid
+// NaNs/infinities on GPU. Refer to the background doc for usage guidance when
+// comparing with film scans or Cineon-referenced material.
 __DEVICE__ float linearToCineon(float linear) {
     if (linear <= 0.0f) return 0.0f;
     // keep original formula but clamp result to [0,1]
