@@ -13,7 +13,7 @@ Describe the change in 1-2 sentences.
 - List manual verification steps and scope screenshots (parade/histogram) if visual.
 
 ## Pre-review mini-check (required)
-Quick items to verify before requesting review. See the full reviewer checklist in the private maintainer archive `internal/ARCHIVE_DOCS.md`.
+Quick items to verify before requesting review. For the full reviewer checklist or maintainer-only guidance, contact the repository owner.
 
 - [ ] `DEFINE_UI_PARAMS` names are used in `transform()` (or copied to `_l` locals).
 - [ ] Pipeline order preserved (see `docs/SPECIFICATION.md#authoritative-pipeline`) and Preserve Luminance behavior verified if used.

@@ -6,7 +6,7 @@ test, and extend `FadedBalancerOFX.dctl` safely and quickly.
 Quick facts
 - Single-file DCTL: `FadedBalancerOFX.dctl` is the canonical source (entry: `__DEVICE__ float3|float4 transform(...)`).
 - No build: test by copying the `.dctl` into Resolve's LUT/DCTL folder and restarting Resolve.
-- Private maintainers docs: `internal/ARCHIVE_DOCS.md` and `internal/DCTL_HELPERS.md` (git-ignored) hold extended guidance and snippets.
+- Private maintainer guidance and helper snippets are available to the project owner/maintainers. Contact the repository owner for access to maintainer documentation.
 
 Must-follow rules (do not change without owner approval)
 - Pipeline ordering is authoritative: see `docs/SPECIFICATION.md#authoritative-pipeline`.
@@ -19,10 +19,10 @@ Concrete, copy-paste patterns
 - Midtones (gamma): `out = _powf(in, 1.0f / midtones);` (midtones ~ [0.1f..3.0f]).
 - Preserve luminance: compute Rec.709 Y `0.2126f*R + 0.7152f*G + 0.0722f*B` before per-channel edits and rescale after when enabled.
 - Mixing: use `_fminf` / `_fmaxf` for Darken/Lighten (no weighted blends).
-- Use `safe_pow(base, exp)` (clamp base ≥ 1e-9f) — see `internal/DCTL_HELPERS.md`.
+- Use `safe_pow(base, exp)` (clamp base ≥ 1e-9f). Contact the repository owner for maintainer helper snippets.
 
 Files to update together when changing runtime behavior
-- `FadedBalancerOFX.dctl`, `docs/SPECIFICATION.md`, `docs/API.md` (and update `internal/ARCHIVE_DOCS.md` for developer notes).
+- `FadedBalancerOFX.dctl`, `docs/SPECIFICATION.md`, `docs/API.md` (and notify the repository owner for maintainer notes).
 
 Testing & validation (manual)
 - Install test: copy `.dctl` to Resolve LUT/DCTL folder and restart.

@@ -97,10 +97,10 @@ DEFINE_UI_PARAMS(outputToCineon, 🎞️ Output to Cineon Log, DCTLUI_CHECK_BOX,
 // private background reference for full rationale:
 //   internal/BACKGROUND_FILM_FADING.md
 // Enable these to expose short-help in the DCTL UI (uncommented on purpose):
-DEFINE_UI_TOOLTIP(fadeCorrection, "Soft contrast & saturation boost for faded scans. See internal/BACKGROUND_FILM_FADING.md.")
-DEFINE_UI_TOOLTIP(preserveLuminance, "Rescale RGB after per-channel work to keep perceived brightness. See internal/BACKGROUND_FILM_FADING.md.")
-DEFINE_UI_TOOLTIP(outputToCineon, "Simple Cineon-style log output for film inspection. See internal/BACKGROUND_FILM_FADING.md.")
-DEFINE_UI_TOOLTIP(globalMidtones, "Global midtone gamma. Small changes rebalance faded palettes. See internal/BACKGROUND_FILM_FADING.md.")
+DEFINE_UI_TOOLTIP(fadeCorrection, "Soft contrast & saturation boost for faded scans. Contact project owner for maintainer notes.")
+DEFINE_UI_TOOLTIP(preserveLuminance, "Rescale RGB after per-channel work to keep perceived brightness. Contact project owner for maintainer notes.")
+DEFINE_UI_TOOLTIP(outputToCineon, "Simple Cineon-style log output for film inspection. Contact project owner for maintainer notes.")
+DEFINE_UI_TOOLTIP(globalMidtones, "Global midtone gamma. Small changes rebalance faded palettes. Contact project owner for maintainer notes.")
 
 
 

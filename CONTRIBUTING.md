@@ -6,9 +6,9 @@ Please keep changes small, reversible, and well-documented.
 
 ## Quick checklist for PRs
 - Update code in `FadedBalancerOFX.dctl` only when necessary.
-- Update docs in `docs/` that correspond to behavioral changes (`SPECIFICATION.md`, `API.md`). For developer guidance and tests consult `internal/ARCHIVE_DOCS.md` (private).
+- Update docs in `docs/` that correspond to behavioral changes (`SPECIFICATION.md`, `API.md`). For detailed developer guidance and tests, contact the repository owner for access to maintainer documentation.
 - Include before/after screenshots and RGB parade scope images for any visual change.
-- Describe behavioral changes and list acceptance tests you used from the internal archive (`internal/ARCHIVE_DOCS.md`).
+- Describe behavioral changes and list acceptance tests you used. If you need maintainer-only acceptance steps, contact the repository owner.
 
 ## DCTL-specific rules (must follow)
 - Keep the canonical pipeline order (see `docs/SPECIFICATION.md#authoritative-pipeline`) when making changes.
