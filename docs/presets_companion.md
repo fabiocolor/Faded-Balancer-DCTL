@@ -65,30 +65,7 @@ Minimal submission (copy/paste into email or an issue):
 	- Global Shadows (R,G,B):
 	- Global Midtones (scalar or R,G,B):
 	- Global Highlights (R,G,B):
-
-	# Preset Companion (short)
-
-	Ten starter presets are provided to help you get close quickly. Presets set temporary values only; they do not change your sliders.
-
-	Quick meanings:
-	- Red Compress: calms red mids/highs.
-	- Balanced: safe neutral baseline.
-	- Heavy Red Crush: strong rescue for severe red imbalance (use carefully).
-
-	How to pick:
-	1. Start with "Balanced" if unsure.
-	2. Try Red Compress presets if the image looks magenta.
-	3. Use Heavy Red Crush only for extreme cases.
-
-	After choosing:
-	- Nudge Fade Correction (small values like 0.1010.30).
-	- Adjust Global then Per-Channel values.
-	- Use Preserve Luminance if overall brightness changes.
-
-	Share presets
-	- If you want to share a useful preset, email `info@fabiocolor.com` with a short text file listing the name, a one-line description, and the key changed values. Maintainers will reply with the exact submission format if needed.
-
-
+   
 License / consent
 - Include a short line giving permission to include the preset in the repository (recommended: CC0 / Public Domain), or specify preferred attribution.
 	Example: "I consent to inclusion under CC0 (public domain)" or "Include with attribution: @username".
