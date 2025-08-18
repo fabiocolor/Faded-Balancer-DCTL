@@ -8,7 +8,7 @@ A DaVinci Resolve DCTL OFX plugin for balancing RGB channels and correcting fade
 
 **Current: v1.4.0** (previous public base was v1.3.0; earlier versions in `previous_versions/`)
 
-#### What's New in v1.4.0 (additive)
+#### What's New in v1.4.0
 - Added non-destructive preset system (10 starter corrective presets; toggling back to None restores baseline UI state).
 - Internal pipeline clarified (see Pipeline section) – ordering unchanged from spec; presets occur before global stage.
 - Minor doc clarifications; no processing math changes versus v1.3.0.
