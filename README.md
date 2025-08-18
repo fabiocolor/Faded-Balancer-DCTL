@@ -1,12 +1,14 @@
 # FadedBalancerOFX
 
-A DaVinci Resolve DCTL OFX plugin for balancing RGB channels and correcting faded film scans. It provides accessible and flexible tools for channel adjustment, mixing, and restoration preparation.
+A DaVinci Resolve DCTL OFX plugin focused on corrective balancing of faded / dye-shifted film scans. It provides precise, minimal, and invertible channel tools (global + per-channel LGGH, min/max mixing, replace, removal, optional Cineon log inspection) to neutralize classic magenta / purple casts without imposing a stylized look.
+
+Synopsis: A quick, conservative corrective pass for faded chromogenic film scans — use presets and the Fade Correction scalar to recover midtone contrast and rebalance neutral drift, then refine with per-channel controls. See the project FAQ for a short quickstart and a visual scope checklist for verification.
 
 ---
 
 ### Version
 
-**v1.3.0**
+**v1.3.1**
 -   **macOS:** Fully compatible.
 -   **Windows:** Fully compatible.
 -   **Linux:** Not yet tested.
@@ -14,7 +16,7 @@ A DaVinci Resolve DCTL OFX plugin for balancing RGB channels and correcting fade
 #### What's New in v1.3.0
 - Added `Preserve Luminance` (⚖) – normalizes luma after per-channel stage only (global adjustments still shift exposure).
 - Renamed channel "Copy" operations to clearer **Replace** (e.g. "Replace Red → With Green").
-- Locked processing order: Global → Fade Correction → Per-Channel → Mixing → Replace → Removal → Output.
+- Processing order is canonical and should not be changed without owner approval.
 - Consolidated UI/label/icon overhaul (option text simplification, Darken/Lighten composite combos, consistent icon set, duplicate definitions removed).
 
 #### What's New in v1.2.0
@@ -24,12 +26,17 @@ A DaVinci Resolve DCTL OFX plugin for balancing RGB channels and correcting fade
 
 ---
 
-### Features
+### Features (Shipped)
 
--   **Film Fade Correction:** A dedicated tool to correct faded footage by adaptively enhancing contrast and saturation.
--   **Global & Per-Channel Balance:** Adjust Lift, Gamma, and Gain for all channels together or individually.
--   **Channel Mixing:** Mix channels by taking the minimum or maximum values between them (e.g., `Red = min(Red, Green)`).
--   **Channel Replace & Removal:** Replace a channel's data with another or remove a channel entirely (previously labeled Copy).
+- **Fade Correction Scalar:** Subtle contrast/saturation nudge for faded scans (does not invent chroma).
+- **Global & Per-Channel Lift/Gamma/Gain (LGGH):** Offset, Shadows, Midtones (gamma), Highlights controls for overall and per-channel balancing.
+- **Preserve Luminance (⚖):** Optional Rec.709 Y rescale after per-channel adjustments.
+- **Channel Mixing:** Pure min/max (Darken = min, Lighten = max) operations — deterministic, no weighted blends.
+- **Channel Replace & Removal:** Deterministic copy (replace) then removal stage (removal overrides earlier changes).
+- **Optional Cineon Output:** Per-channel linear → Cineon-like log mapping for safe inspection (not a final clamp).
+
+### Roadmap (High Level)
+Planned future work includes picker-based neutral/white/black scaling, stock-aware presets, density-domain dye operations, additional archival log outputs (Cineon variants / ADX), and diagnostic overlays. These items are exploratory and intentionally **not** documented in the public spec until scheduled.
 <!-- Removed clamp reference: processing is in 32-bit float with optional Cineon log output -->
 
 ---
@@ -57,7 +64,20 @@ Here are a few examples showcasing the plugin's effectiveness in correcting fade
 
 ### Intended Use
 
-FadedBalancerOFX is designed for archivists, restoration specialists, and anyone working with digitally scanned film that exhibits dye fading or other channel imbalances. While it cannot restore lost color information, it provides the essential tools to neutralize color casts and prepare footage for further restoration work.
+Designed for archivists, restoration specialists, and colorists handling chromogenic film scans with dye imbalance (cyan loss → magenta cast, etc.). It is a corrective preparation tool — not a creative “look” generator — and avoids irreversible gamut remapping.
+
+### Background (Why It Exists)
+Chromogenic film dyes (cyan, magenta, yellow) fade at unequal rates; historically cyan has been the least stable, which often leaves neutrals biased toward magenta on older Eastman and some pre-1983 Fuji prints. Faded scans therefore commonly exhibit a magenta/purple cast and reduced contrast.
+
+FadedBalancerOFX implements a compact, conservative set of operations that map directly to these archival problems:
+
+- Fade Correction Scalar: a low-risk global nudge to restore usable contrast and saturation on mildly faded scans without aggressive per-channel edits.
+- Per-channel LGGH (Lift/Gamma/Gain/Highlights): enables targeted recovery when one dye layer (often cyan) has decayed more than others — use midtones/gamma for gentle rebalancing and shadows/highlights for tonal-zone fixes.
+- Preserve Luminance: keeps perceived brightness stable when making per-channel changes so correcting color doesn't unintentionally darken or brighten the image.
+- Channel Mixing / Replace / Removal: deterministic min/max mixing and explicit replace/remove stages let you recover neutrality by borrowing information from more stable channels or by removing a damaged channel entirely — useful on extreme fades where one dye layer is unreliable.
+- Cineon Inspection Output: many archival workflows require inspecting values in a film-log space; the Cineon-like toggle maps linear channels into a log inspection view so you can safely check for clipping and density behavior without a destructive clamp.
+
+These controls were chosen to be fast, invertible, and predictable on GPU, enabling interactive use in Resolve while remaining compatible with downstream archival workflows.
 
 ---
 
@@ -81,10 +101,13 @@ FadedBalancerOFX is designed for archivists, restoration specialists, and anyone
 ### Workflow Recommendations
 
 To achieve the best results and preserve maximum image fidelity, consider the following workflow:
+### Workflow Recommendations
 
-*   **Prevent Clipping:** Enable the `Output to Cineon Log` checkbox to verify there is no highlight or shadow clipping in your image.
+Start conservatively: apply the Fade Correction Scalar and a gentle preset if available, then refine with per-channel midtones rather than heavy shadow lifts. When possible, sample neutral patches (frame leaders, border frames, or known gray references) and use small increments — large boosts risk amplifying noise.
 
-*   **Avoid Clipping in Red Channel:** When dealing with significant red channel imbalances (common in faded film), it is often better to use the `Red Midtones` control for the primary correction. Using `Red Shadows` (lift) can sometimes crush shadow detail, whereas adjusting the midtones offers a gentler re-balance.
+- Prevent Clipping: Use the Cineon inspection output to check for highlight/shadow clipping in a film-log view before committing stronger corrections.
+- Prefer Midtone Adjustments for Color Balance: Midtone (gamma) adjustments usually rebalance perceived color without crushing shadow detail.
+- Preserve Luminance When Needed: Toggle Preserve Luminance when you want color fixes without changing perceived brightness.
 
 ### Video Demonstration
 
