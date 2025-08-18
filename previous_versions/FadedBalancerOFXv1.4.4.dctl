@@ -1,4 +1,4 @@
-// FadedBalancerOFX v1.4.0
+// FadedBalancerOFX v1.4.4
 // DaVinci Resolve DCTL plugin to rebalance RGB for faded film scans.
 //
 // Pipeline (per-pixel): presets → global → fade → per-channel → (optional preserve luminance) → mixing (darken/lighten) → replace → removal → (optional linear→Cineon) output
@@ -25,6 +25,7 @@
 
 DEFINE_UI_PARAMS(presetMode, Preset, DCTLUI_COMBO_BOX, 0, { PRESET_NONE, PRESET_EASTMAN1, PRESET_EASTMAN2, PRESET_EASTMAN3, PRESET_EASTMAN4, PRESET_EASTMAN5, PRESET_EASTMAN6, PRESET_EASTMAN7, PRESET_EASTMAN8, PRESET_EASTMAN9, PRESET_EASTMAN10 }, { None, Red Compress Mid, Balanced Aggregate, Red Compress Hi Lift, Red Comp Blue Tweak, Heavy Red Crush, Mild Corrective, Neutral Red Mid Tweak, Strong Red Compress, Neg Offset Blue Cut, Highlight Lift Blue Shadow })
 // (presetBlend removed — presets apply directly to local copies before processing)
+
 
 
 // === UI PARAMETERS ===
@@ -67,9 +68,10 @@ DEFINE_UI_PARAMS(channelRemovalMode, 🗑️ Channel Removal, DCTLUI_COMBO_BOX, 
 DEFINE_UI_PARAMS(outputToCineon, 🎞️ Output to Cineon Log, DCTLUI_CHECK_BOX, 0)
 
 
+
 // Short help text shown in the plugin UI (Resolve 19.1+). Tooltips must reference
 // the UI LABEL token (not the parameter identifier) per vendor macro spec.
-// v1.4.0: user goal–oriented wording for colorists.
+// v1.4.4: user goal–oriented wording for colorists.
 DEFINE_UI_TOOLTIP(Preset, "Starting looks for faded film")
 DEFINE_UI_TOOLTIP(✨ Fade Correction, "Restore contrast & color fade")
 DEFINE_UI_TOOLTIP(🌐 Global Offset, "Raise or lower whole image")
