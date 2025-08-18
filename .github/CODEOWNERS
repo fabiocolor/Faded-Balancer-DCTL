@@ -1,0 +1,3 @@
+# CODEOWNERS - require review from repo owner for vendor docs
+# This ensures PRs that modify vendor files send review requests to the owner.
+/internal/docs/vendor/bmd-dctl/README.md @fabiocolor
