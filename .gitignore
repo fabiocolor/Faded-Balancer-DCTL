@@ -1,2 +1,14 @@
+# Local developer files (should not be committed)
+.githooks/
+.venv/
+
+# Auto-generated presets (kept local)
+/presets/presets_auto.json
+
+# macOS
+.DS_Store
+# internal/ contains maintainer-only documentation. If these files should be
+# private, consider moving them to a private repository or removing them from
+# the public tree. Public-facing docs should not link to `internal/` files.
 internal/
 .DS_Store
