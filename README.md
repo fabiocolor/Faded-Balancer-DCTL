@@ -1,5 +1,15 @@
 # FadedBalancerOFX
 
+![Version](https://img.shields.io/badge/version-v1.4.0-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+[![Donate](https://img.shields.io/badge/donate-PayPal-blue.svg)](https://paypal.me/fabiocolor)
+
+<p align="center">
+  <a href="docs/BACKGROUND_FILM_FADING.md">Background & Science</a> •
+  <a href="docs/presets_companion.md">Presets Companion</a> •
+  <a href="docs/FAQ.md">FAQ</a>
+</p>
+
 A DaVinci Resolve DCTL OFX plugin for balancing RGB channels and correcting faded film scans. It provides accessible and flexible tools for channel adjustment, mixing, and restoration preparation.
 
 ---
@@ -55,20 +65,45 @@ Identity: defaults with preset=None produce output ≈ input (floating point tol
 
 Here are a few examples showcasing the plugin's effectiveness in correcting faded film scans.
 
-**Example 1: Captain Scene**
-| Before | After |
-| :---: | :---: |
-| ![Captain Scene Before](assets/captain_before.png) | ![Captain Scene After](assets/captain_after.png) |
+<details>
+<summary>Example 1: Captain Scene</summary>
 
-**Example 2: Beach Scene**
 | Before | After |
 | :---: | :---: |
-| ![Beach Scene Before](assets/beach_before.png) | ![Beach Scene After](assets/beach_after.png) |
+| ![Captain Scene Before](assets/before/captain_before.png) | ![Captain Scene After](assets/after/captain_after.png) |
+</details>
 
-**Example 3: Table Scene**
+<details>
+<summary>Example 2: Beach Scene</summary>
+
 | Before | After |
 | :---: | :---: |
-| ![Table Scene Before](assets/table_before.png) | ![Table Scene After](assets/table_after.png) |
+| ![Beach Scene Before](assets/before/beach_before.png) | ![Beach Scene After](assets/after/beach_after.png) |
+</details>
+
+<details>
+<summary>Example 3: Table Scene</summary>
+
+| Before | After |
+| :---: | :---: |
+| ![Table Scene Before](assets/before/table_before.png) | ![Table Scene After](assets/after/table_after.png) |
+</details>
+
+<details>
+<summary>Example 4: Boy Scene</summary>
+
+| Before | After |
+| :---: | :---: |
+| ![Boy Scene Before](assets/before/boy_before.png) | ![Boy Scene After](assets/after/boy_after.png) |
+</details>
+
+<details>
+<summary>Example 5: Night Scene</summary>
+
+| Before | After |
+| :---: | :---: |
+| ![Night Scene Before](assets/before/night_before.png) | ![Night Scene After](assets/after/night_after.png) |
+</details>
 
 ---
 
@@ -129,6 +164,15 @@ For a visual guide on how to use the plugin, check out the video tutorial below:
 ### Credits
 
 Developed by Fabio Bedoya.
+
+---
+
+### Contact
+
+- **Email:** [info@fabiocolor.com](mailto:info@fabiocolor.com)
+- **Instagram:** [@fabiocolor](https://www.instagram.com/fabiocolor)
+- **LinkedIn:** [Fabio Bedoya](https://www.linkedin.com/in/fabiobedoya/)
+- **YouTube:** [@fabiocolor](https://www.youtube.com/@fabiocolor)
 
 ---
 

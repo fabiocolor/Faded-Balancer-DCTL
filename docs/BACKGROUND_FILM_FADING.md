@@ -1,3 +1,10 @@
+<p align="center">
+  <a href="../README.md">Home</a> •
+  <a href="BACKGROUND_FILM_FADING.md">Background & Science</a> •
+  <a href="presets_companion.md">Presets Companion</a> •
+  <a href="FAQ.md">FAQ</a>
+</p>
+
 # Fading Behavior of Chromogenic Film Stocks (Kodak Eastman Color vs. Fuji Color)
 
 This public background summary covers observed fading behaviors of chromogenic photographic prints and practical correction approaches used in digital restoration workflows. It is intended as a technical reference for users and contributors; for vendor-specific archival guidance consult vendor technical publications or archival conservation specialists.

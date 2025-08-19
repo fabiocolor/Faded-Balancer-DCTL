@@ -1,3 +1,10 @@
+<p align="center">
+  <a href="../README.md">Home</a> •
+  <a href="BACKGROUND_FILM_FADING.md">Background & Science</a> •
+  <a href="presets_companion.md">Presets Companion</a> •
+  <a href="FAQ.md">FAQ</a>
+</p>
+
 # Preset Companion (Simple Guide)
 
 These 10 presets are gentle starting points for common faded film situations. Pick one that feels closest, then fine‑tune the sliders. Presets never overwrite your actual UI values; they only set temporary internal copies.
@@ -9,19 +16,83 @@ Quick meanings:
 - "Neg Offset Blue Cut": slight overall dip plus blue shadow reduction to tame cool noise.
 - "Highlight Lift Blue Shadow": lifts highlights while gently pulling blue shadows down.
 
-Preset list (1 → 10):
-1. Red Compress Mid – everyday mild red mid control.
-2. Balanced Aggregate – safe neutral baseline.
-3. Red Compress Hi Lift – mild red compress with a modest highlight lift.
-4. Red Comp Blue Tweak – adds a tiny blue shadow dip.
-5. Heavy Red Crush – strong red mid compression + highlight gain (watch clipping).
-6. Mild Corrective – small overall tidy with softer highlights.
-7. Neutral Red Mid Tweak – near neutral, light red mid compression.
-8. Strong Red Compress – deeper red compression for tougher fades.
-9. Neg Offset Blue Cut – slight negative offset plus blue shadow suppression.
-10. Highlight Lift Blue Shadow – gentle highlight lift + softened blue shadows (safer variant).
+---
 
-How to choose:
+## Preset List (1 → 10)
+
+### 1. Red Compress Mid
+Everyday mild red mid control.
+
+| Before | After |
+| :---: | :---: |
+| ![Red Compress Mid Before](../assets/before/RedCompressMid_before.png) | ![Red Compress Mid After](../assets/after/RedCompressMid_after.png) |
+
+### 2. Balanced Aggregate
+Safe neutral baseline.
+
+| Before | After |
+| :---: | :---: |
+| ![Balanced Aggregate Before](../assets/before/BalancedAggregate_before.png) | ![Balanced Aggregate After](../assets/after/BalancedAggregate_after.png) |
+
+### 3. Red Compress Hi Lift
+Mild red compress with a modest highlight lift.
+
+| Before | After |
+| :---: | :---: |
+| ![Red Compress Hi Lift Before](../assets/before/RedCompressHiLift_before.png) | ![Red Compress Hi Lift After](../assets/after/RedCompressHiLift_after.png) |
+
+### 4. Red Comp Blue Tweak
+Adds a tiny blue shadow dip.
+
+| Before | After |
+| :---: | :---: |
+| ![Red Comp Blue Tweak Before](../assets/before/RedCompBlueTweak_before.png) | ![Red Comp Blue Tweak After](../assets/after/RedCompBlueTweak_after.png) |
+
+### 5. Heavy Red Crush
+Strong red mid compression + highlight gain (watch clipping).
+
+| Before | After |
+| :---: | :---: |
+| ![Heavy Red Crush Before](../assets/before/heavyredcrush_before.png) | ![Heavy Red Crush After](../assets/after/heavyredcrush_after.png) |
+
+### 6. Mild Corrective
+Small overall tidy with softer highlights.
+
+| Before | After |
+| :---: | :---: |
+| ![Mild Corrective Before](../assets/before/MildCorrective_before.png) | ![Mild Corrective After](../assets/after/MildCorrective_after.png) |
+
+### 7. Neutral Red Mid Tweak
+Near neutral, light red mid compression.
+
+| Before | After |
+| :---: | :---: |
+| ![Neutral Red Mid Tweak Before](../assets/before/NeutralRedMid%20Tweak_before.png) | ![Neutral Red Mid Tweak After](../assets/after/NeutralRedMid%20Tweak_after.png) |
+
+### 8. Strong Red Compress
+Deeper red compression for tougher fades.
+
+| Before | After |
+| :---: | :---: |
+| ![Strong Red Compress Before](../assets/before/StrongRedCompress_before.png) | ![Strong Red Compress After](../assets/after/StrongRedCompress_after.png) |
+
+### 9. Neg Offset Blue Cut
+Slight negative offset plus blue shadow suppression.
+
+| Before | After |
+| :---: | :---: |
+| ![Neg Offset Blue Cut Before](../assets/before/NegOffsetBlueCut_before.png) | ![Neg Offset Blue Cut After](../assets/after/NegOffsetBlueCut_after.png) |
+
+### 10. Highlight Lift Blue Shadow
+Gentle highlight lift + softened blue shadows (safer variant).
+
+| Before | After |
+| :---: | :---: |
+| ![Highlight Lift Blue Shadow Before](../assets/before/HighlightLiftBlueShadow_before.png) | ![Highlight Lift Blue Shadow After](../assets/after/HighlightLiftBlueShadow_after.png) |
+
+---
+
+## How to choose:
 - Start with 2 (Balanced) if unsure.
 - If image is very magenta: try 1, 3, or 8.
 - If highlights feel dull: try 3 or 10.
