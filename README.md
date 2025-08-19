@@ -65,45 +65,35 @@ Identity: defaults with preset=None produce output ≈ input (floating point tol
 
 Here are a few examples showcasing the plugin's effectiveness in correcting faded film scans.
 
-<details>
-<summary>Example 1: Captain Scene</summary>
+**Example 1: Captain Scene**
 
 | Before | After |
 | :---: | :---: |
 | ![Captain Scene Before](assets/before/captain_before.png) | ![Captain Scene After](assets/after/captain_after.png) |
-</details>
 
-<details>
-<summary>Example 2: Beach Scene</summary>
+**Example 2: Beach Scene**
 
 | Before | After |
 | :---: | :---: |
 | ![Beach Scene Before](assets/before/beach_before.png) | ![Beach Scene After](assets/after/beach_after.png) |
-</details>
 
-<details>
-<summary>Example 3: Table Scene</summary>
+**Example 3: Table Scene**
 
 | Before | After |
 | :---: | :---: |
 | ![Table Scene Before](assets/before/table_before.png) | ![Table Scene After](assets/after/table_after.png) |
-</details>
 
-<details>
-<summary>Example 4: Boy Scene</summary>
+**Example 4: Boy Scene**
 
 | Before | After |
 | :---: | :---: |
 | ![Boy Scene Before](assets/before/boy_before.png) | ![Boy Scene After](assets/after/boy_after.png) |
-</details>
 
-<details>
-<summary>Example 5: Night Scene</summary>
+**Example 5: Night Scene**
 
 | Before | After |
 | :---: | :---: |
 | ![Night Scene Before](assets/before/night_before.png) | ![Night Scene After](assets/after/night_after.png) |
-</details>
 
 ---
 
