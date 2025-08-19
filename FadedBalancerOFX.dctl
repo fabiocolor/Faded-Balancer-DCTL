@@ -301,8 +301,9 @@ __DEVICE__ float4 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
     // 5: Heavy Red Crush (extreme red compression & highlight gain)
     if (presetMode == PRESET_EASTMAN5) {
         preset_applied = 1;
-        p_globalOffset = 0.074f; p_globalShadows = 0.000f; p_globalMidtones = 1.000f; p_globalHighlights = 0.887f;
-        p_redOffset = -0.229f; p_redShadows = -0.500f; p_redMidtones = 1.471f; p_redHighlights = 2.500f; // soft clamp from 3.000f
+    // Use values derived from Preset_01 (Heavy Red Crush sample)
+    p_globalOffset = 0.074f; p_globalShadows = 0.000f; p_globalMidtones = 1.000f; p_globalHighlights = 0.887f;
+    p_redOffset = -0.229f; p_redShadows = -0.500f; p_redMidtones = 1.471f; p_redHighlights = 3.000f;
         p_greenOffset = 0.000f; p_greenShadows = 0.000f; p_greenMidtones = 1.000f; p_greenHighlights = 0.954f;
         p_blueOffset = 0.000f; p_blueShadows = 0.000f; p_blueMidtones = 1.000f; p_blueHighlights = 1.000f;
         p_blueDarkenWith = BDW_GREEN;
