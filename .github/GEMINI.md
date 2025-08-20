@@ -6,10 +6,7 @@ This document provides context for the Gemini AI assistant to understand and int
 
 FadedBalancerOFX is a DaVinci Resolve DCTL OFX plugin for balancing RGB channels and correcting faded film scans. It provides accessible and flexible tools for channel adjustment, mixing, and restoration preparation.
 
-The core of the project is the DCTL code, written in a C-like language that DaVinci Resolve understands. There are two versions of the DCTL file:
-
-*   `FadedBalancerOFX.dctl`: The main plugin file in English.
-*   `FadedBalancerOFX_es.dctl`: A Spanish-localized version of the plugin.
+The core of the project is the DCTL code, written in a C-like language that DaVinci Resolve understands. The main plugin file is `FadedBalancerOFX.dctl`.
 
 ## Key Conventions
 
@@ -41,4 +38,4 @@ The project includes Python scripts for validation. To run them, you will need P
 
 ## Authoritative Vendor Reference
 
-All code or doc modifications MUST be compared against the official Blackmagic Design DCTL reference stored under `internal/docs/vendor/bmd-dctl/` before implementation.
+Before planning, advising on, or implementing any DCTL-related feature, you MUST first consult the authoritative Blackmagic Design DCTL reference stored under `internal/docs/vendor/bmd-dctl/`. This is the single source of truth for DCTL capabilities (e.g., file access, LUT handling, available functions). Do not rely on general knowledge; always verify against this local documentation.

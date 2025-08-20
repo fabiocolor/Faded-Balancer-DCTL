@@ -32,7 +32,7 @@ Purpose: Enable AI coding agents to safely extend / maintain the DCTL plugin wit
 - If you touch that vendor README, add the label and reference the vendor release in the PR body.
 
 ## Authoritative Vendor Reference (MANDATORY BEFORE CHANGES)
-- All code or doc modifications MUST be compared against the official Blackmagic Design DCTL reference stored under `internal/docs/vendor/bmd-dctl/` before implementation.
+- Before planning, advising on, or implementing any DCTL-related feature, you MUST first consult the authoritative Blackmagic Design DCTL reference stored under `internal/docs/vendor/bmd-dctl/`. This is the single source of truth for DCTL capabilities (e.g., file access, LUT handling, available functions). Do not rely on general knowledge; always verify against this local documentation.
 - Do NOT quote or copy text from vendor docs into public files; only apply the required technical constraints (signatures, intrinsics, limits) inferred from them.
 - When uncertain whether an intrinsic / macro / signature is vendor‑supported, STOP and annotate the PR with a short question instead of guessing.
 - Record in the PR description: `Vendor check: OK (no new constructs)` or list each newly used intrinsic / macro verified (e.g. `_log10f` already present, etc.).
