@@ -35,3 +35,10 @@ internal/
 
 # Old version archives (use GitHub Releases instead)
 previous_versions/
+
+# Sensitive and repo infra to keep out of commits
+.env
+.github/
+# Note: ignoring .gitignore only prevents future changes from being tracked;
+# the current file remains in history and visible in the repo.
+.gitignore
