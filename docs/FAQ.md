@@ -1,50 +1,22 @@
-<p align="center">
-  <a href="../README.md">Home</a> •
-  <a href="BACKGROUND_FILM_FADING.md">Background & Science</a> •
-  <a href="presets_companion.md">Presets Companion</a> •
-  <a href="FAQ.md">FAQ</a>
-</p>
+# FadedBalancer — FAQ
 
-# FadedBalancer — FAQ (plain)
+- What is it: A DCTL for rebalancing RGB in faded film scans; restores neutral balance and midtone contrast.
+- When to use: Early in grading on magenta‑shifted, washed‑out, or low‑contrast scans.
+- Core controls: Fade Correction; Global+Per‑Channel Offset/Shadows/Midtones/Highlights; Mixing (Darken/Lighten); Replace/Remove; optional Cineon view.
 
-Short answers for colorists and restoration technicians. For technical notes contact info@fabiocolor.com.
+## Quick Workflow
+1) Pick a preset close to the target look.
+2) Set Fade Correction for midtone contrast.
+3) Balance globally, then refine per‑channel.
+4) Enable Preserve Luminance if overall brightness drifts.
 
-<details>
-<summary>What is this?</summary>
-- A small DCTL that helps fix faded film scans by rebalancing red, green, and blue and recovering midtone contrast.
-</details>
+## Notes for Restoration
+- Prefer midtone adjustments to avoid shadow noise amplification.
+- Use Mixing/Replace only when a channel dominates (e.g., cyan loss → reduce red mids or borrow green/blue).
+- Verify clipping in Cineon view; keep operations invertible where possible.
 
-<details>
-<summary>When to use it?</summary>
-- Use it early on scanned film that looks magenta/purple, washed out, or low in contrast.
-</details>
+## Install
+- Place `FadedBalancerOFX.dctl` in Resolve’s LUT/DCTL folder and restart.
 
-<details>
-<summary>Main controls (plain):</summary>
-- Fade Correction: gentle contrast + color boost for faded footage.
-- Preserve Luminance: keeps overall brightness similar after color tweaks.
-- Global / Per-Channel: Offset, Shadows, Midtones, Highlights.
-- Mixing / Replace / Remove: borrow or mute channels to fix bad dye layers.
-</details>
+Contact: info@fabiocolor.com
 
-<details>
-<summary>Quick workflow:</summary>
-1. Pick a preset that looks close.
-2. Set Fade Correction for midtone contrast.
-3. Adjust Global then Per-Channel sliders.
-4. Use Preserve Luminance if brightness changed.
-</details>
-
-<details>
-<summary>Safety tips:</summary>
-- Work on copies; keep originals safe.
-- Avoid extreme shadow boosts (noise).
-- Small midtone changes first.
-</details>
-
-<details>
-<summary>Install:</summary>
-- Put `FadedBalancerOFX.dctl` in Resolve's LUT/DCTL folder and restart.
-</details>
-
-For detailed examples and technical notes contact info@fabiocolor.com.

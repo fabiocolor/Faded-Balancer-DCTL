@@ -11,7 +11,7 @@
   <a href="https://github.com/fabiocolor/Faded-Balancer-DCTL/releases">Releases</a>
 </p>
 
-A DaVinci Resolve DCTL OFX plugin for balancing RGB channels and correcting faded film scans. It provides accessible and flexible tools for channel adjustment, mixing, and restoration preparation.
+A DaVinci Resolve DCTL OFX plugin for balancing RGB channels in faded film scans. It provides controlled per‑channel adjustment, mixing, and inspection tools suited to archival restoration work.
 
 ---
 
@@ -23,13 +23,13 @@ Versions are tracked on the GitHub Releases page. See release notes for changes 
 
 ### Features
 
- -   **Film Fade Correction:** A dedicated tool to correct faded footage by adaptively enhancing contrast and saturation (see `docs/BACKGROUND_FILM_FADING.md` for background and correction strategies).
--   **Global & Per-Channel Balance:** Adjust Lift, Gamma, and Gain for all channels together or individually.
--   **Preserve Luminance (⚖):** Optional re-normalization of luma after per-channel adjustments.
--   **Channel Mixing:** Min/Max composites (e.g., `Red = min(Red, Green)` or `Blue = max(Blue, Green)`), deterministic and invertible.
--   **Channel Replace & Removal:** Replace a channel's data with another or remove a channel entirely (previously labeled Copy).
--   **Optional Cineon Output:** Linear → Cineon-like log inspection mode (not a color managed export transform).
- -   **Presets (v1.4.0):** Non-destructive internal presets that modify only temporary variables; UI slider values remain untouched. See `docs/presets_companion.md` for preset descriptions and guidance.
+- **Fade correction:** Gentle contrast/saturation recovery for faded prints (see `docs/BACKGROUND_FILM_FADING.md`).
+- **Global & per‑channel balance:** Offset/Shadows/Midtones/Highlights controls; tuned for restoration workflows.
+- **Preserve luminance:** Optional luma re‑normalization after per‑channel stage.
+- **Channel mixing:** Darken/Lighten via min/max; deterministic and invertible.
+- **Replace / removal:** Replace a channel from another, or mute channels for checks.
+- **Cineon inspection:** Optional linear→Cineon log viewing transform (inspection only).
+- **Presets:** Non‑destructive starting points (see `docs/presets_companion.md`).
 
 ### Pipeline (Canonical Order)
 1. Preset application (internal temporary variables only)
@@ -46,39 +46,9 @@ Identity: defaults with preset=None produce output ≈ input (floating point tol
 
 ---
 
-### Before & After
+### Examples
 
-Here are a few examples showcasing the plugin's effectiveness in correcting faded film scans.
-
-**Example 1: Captain Scene**
-
-| Before | After |
-| :---: | :---: |
-| ![Captain Scene Before](assets/before/captain_before.png) | ![Captain Scene After](assets/after/captain_after.png) |
-
-**Example 2: Beach Scene**
-
-| Before | After |
-| :---: | :---: |
-| ![Beach Scene Before](assets/before/beach_before.png) | ![Beach Scene After](assets/after/beach_after.png) |
-
-**Example 3: Table Scene**
-
-| Before | After |
-| :---: | :---: |
-| ![Table Scene Before](assets/before/table_before.png) | ![Table Scene After](assets/after/table_after.png) |
-
-**Example 4: Boy Scene**
-
-| Before | After |
-| :---: | :---: |
-| ![Boy Scene Before](assets/before/boy_before.png) | ![Boy Scene After](assets/after/boy_after.png) |
-
-**Example 5: Night Scene**
-
-| Before | After |
-| :---: | :---: |
-| ![Night Scene Before](assets/before/night_before.png) | ![Night Scene After](assets/after/night_after.png) |
+Example frames are available under `assets/before/` and `assets/after/`.
 
 ---
 
@@ -101,18 +71,16 @@ FadedBalancerOFX is designed for archivists, restoration specialists, and anyone
 
 ### Usage
 
--   **Fade Correction:** Start with the "Fade Correction" slider to globally improve contrast and saturation.
--   **Channel Balance:** Use the "Global" sliders for overall adjustments, then fine-tune with the individual Red, Green, and Blue controls.
--   **Channel Mixing/Replace:** Use these tools to manage severe color casts. For example, on a film where the cyan dye has faded (leaving a red cast), you can mix or replace the green or blue channels into the red channel to neutralize the image.
--   **Presets (v1.4.0+):** Pick the closest corrective starting point, then refine. Switching back to None returns to baseline instantly (non-destructive).
+- Set Fade Correction for a modest midtone contrast/color lift.
+- Balance globally, then refine with per‑channel controls (R/G/B).
+- Use Mixing/Replace for strong channel dominance (e.g., cyan loss → reduce red mids or borrow green/blue).
+- Presets: choose the closest, then refine; switching to None restores baseline.
 
-### Workflow Recommendations
+### Workflow Notes
 
-To achieve the best results and preserve maximum image fidelity, consider the following workflow:
-
-*   **Prevent Clipping:** Enable the `Output to Cineon Log` checkbox to verify there is no highlight or shadow clipping in your image.
-*   **Avoid Clipping in Red Channel:** When dealing with significant red channel imbalances (common in faded film), it is often better to use the `Red Midtones` control for the primary correction. Using `Red Shadows` (lift) can sometimes crush shadow detail, whereas adjusting the midtones offers a gentler re-balance.
-*   **Use Presets Conservatively:** Apply a preset, evaluate scopes, then refine with per-channel midtones before heavy shadow or highlight changes.
+- Enable Cineon view to check clipping without altering grade context.
+- Prefer midtone adjustments for red bias; large shadow lifts amplify noise.
+- Apply a preset, evaluate scopes, then fine‑tune midtones before heavy shadow/highlight moves.
 
 For common questions and troubleshooting, see the FAQ: `docs/FAQ.md`.
 
@@ -124,15 +92,13 @@ For a visual guide on how to use the plugin, check out the video tutorial below:
 
 ---
 
-### License
+### Documentation & License
 
-## Documentation
+- Background & science: `docs/BACKGROUND_FILM_FADING.md`.
+- Presets companion: `docs/presets_companion.md`.
+- FAQ: `docs/FAQ.md`.
 
-- Background & science: `docs/BACKGROUND_FILM_FADING.md` — technical summary of chromogenic dye fading and practical correction approaches.
-- Presets companion: `docs/presets_companion.md` — detailed descriptions of included presets and recommended starting points.
-- FAQ: `docs/FAQ.md` — common questions, troubleshooting, and user tips.
-
-[MIT License](LICENSE)
+License: [MIT](LICENSE)
 
 ---
 
