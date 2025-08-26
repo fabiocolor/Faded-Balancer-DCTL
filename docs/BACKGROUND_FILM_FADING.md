@@ -1,6 +1,6 @@
 # Film Fading — Practical Background
 
-Plain, technical summary for restoration and archival work. Focus: what fading looks like on scans, how to assess it quickly, and how to correct it with FadedBalancerOFX.
+
 
 ## What Fading Is (brief)
 - Chromogenic color prints use three dye layers: cyan, magenta, yellow.
@@ -48,4 +48,3 @@ Plain, technical summary for restoration and archival work. Focus: what fading l
 - Digital “unfading” of chromogenic film: Trumpy et al., 2023 (open access summary).
 - EBU Tech 3285: preservation of colour photographic images (overview guidance).
 - Image Permanence Institute (IPI): practical storage and stability resources.
-

@@ -11,7 +11,7 @@
   <a href="https://github.com/fabiocolor/Faded-Balancer-DCTL/releases">Releases</a>
 </p>
 
-A DaVinci Resolve DCTL OFX plugin for balancing RGB channels in faded film scans. It provides controlled per‑channel adjustment, mixing, and inspection tools suited to archival restoration work.
+DaVinci Resolve DCTL for rebalancing RGB in faded film scans. Includes per‑channel adjustment, mixing, and Cineon inspection.
 
 ---
 
