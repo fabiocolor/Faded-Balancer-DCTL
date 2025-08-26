@@ -3,12 +3,9 @@
 //
 // Pipeline (per-pixel): presets → global → fade → per-channel → (optional preserve luminance) → mixing (darken/lighten) → replace → removal → (optional linear→Cineon) output
 //
-// Notes for colorists:
-// - "Preserve Luminance": keeps the picture's overall brightness similar after
-//   you change colors. Turn it on when you want to keep the same perceived
-//   brightness while fixing color casts.
-// - Presets: quick starting points for common faded film looks. They only set
-//   temporary values you can adjust; they do not change the sliders permanently.
+// Notes (concise):
+// - Preserve Luminance: re‑normalize luma after per‑channel adjustments.
+// - Presets: non‑destructive starting points; modify local copies only.
 //
 // --- Preset identifiers & selector
 #define PRESET_NONE      0
@@ -113,61 +110,55 @@ DEFINE_UI_PARAMS(outputToCineon, 🎞️ Output to Cineon Log, DCTLUI_CHECK_BOX,
 
 // Short help text shown in the plugin UI (Resolve 19.1+). Tooltips must reference
 // the UI LABEL token (not the parameter identifier) per vendor macro spec.
-// v1.4.0: user goal–oriented wording for colorists.
-DEFINE_UI_TOOLTIP(Preset, "Starting looks for faded film")
-DEFINE_UI_TOOLTIP(✨ Fade Correction, "Restore contrast & color fade")
-DEFINE_UI_TOOLTIP(🌐 Global Offset, "Raise or lower whole image")
-DEFINE_UI_TOOLTIP(🌑 Global Shadows, "Lift or deepen shadows")
-DEFINE_UI_TOOLTIP(🌓 Global Midtones, "Adjust mid contrast")
-DEFINE_UI_TOOLTIP(🌕 Global Highlights, "Lift or tame highlights")
-DEFINE_UI_TOOLTIP(⚖️ Preserve Luminance, "Keep overall brightness")
-DEFINE_UI_TOOLTIP(🔴 Red Offset, "Shift red overall")
-DEFINE_UI_TOOLTIP(🔴 Red Shadows, "Correct red in shadows")
-DEFINE_UI_TOOLTIP(🔴 Red Midtones, "Compress / expand red mids")
-DEFINE_UI_TOOLTIP(🔴 Red Highlights, "Adjust red in highlights")
-DEFINE_UI_TOOLTIP(🟢 Green Offset, "Shift green overall")
-DEFINE_UI_TOOLTIP(🟢 Green Shadows, "Correct green in shadows")
-DEFINE_UI_TOOLTIP(🟢 Green Midtones, "Adjust green mids")
-DEFINE_UI_TOOLTIP(🟢 Green Highlights, "Adjust green highlights")
-DEFINE_UI_TOOLTIP(🔵 Blue Offset, "Shift blue overall")
-DEFINE_UI_TOOLTIP(🔵 Blue Shadows, "Correct blue in shadows")
-DEFINE_UI_TOOLTIP(🔵 Blue Midtones, "Adjust blue mids")
-DEFINE_UI_TOOLTIP(🔵 Blue Highlights, "Adjust blue highlights")
-DEFINE_UI_TOOLTIP(🔴🌙 Red Darken, "Red takes darker value")
-DEFINE_UI_TOOLTIP(🔴☀️ Red Lighten, "Red takes lighter value")
-DEFINE_UI_TOOLTIP(🟢🌙 Green Darken, "Green takes darker value")
-DEFINE_UI_TOOLTIP(🟢☀️ Green Lighten, "Green takes lighter value")
-DEFINE_UI_TOOLTIP(🔵🌙 Blue Darken, "Blue takes darker value")
-DEFINE_UI_TOOLTIP(🔵☀️ Blue Lighten, "Blue takes lighter value")
-DEFINE_UI_TOOLTIP(🔴↔ Replace Red, "Copy other channel into red")
-DEFINE_UI_TOOLTIP(🟢↔ Replace Green, "Copy other channel into green")
-DEFINE_UI_TOOLTIP(🔵↔ Replace Blue, "Copy other channel into blue")
-DEFINE_UI_TOOLTIP(🗑️ Channel Removal, "Mute channel(s) for check")
-DEFINE_UI_TOOLTIP(🎞️ Output to Cineon Log, "View in Cineon log space")
+DEFINE_UI_TOOLTIP(Preset, "Non‑destructive starting looks")
+DEFINE_UI_TOOLTIP(✨ Fade Correction, "Recover midtone contrast and saturation")
+DEFINE_UI_TOOLTIP(🌐 Global Offset, "Add/subtract uniform offset")
+DEFINE_UI_TOOLTIP(🌑 Global Shadows, "Lift/deepen shadows")
+DEFINE_UI_TOOLTIP(🌓 Global Midtones, "Adjust midtone gamma")
+DEFINE_UI_TOOLTIP(🌕 Global Highlights, "Scale highlights")
+DEFINE_UI_TOOLTIP(⚖️ Preserve Luminance, "Re‑normalize luma after per‑channel")
+DEFINE_UI_TOOLTIP(🔴 Red Offset, "Add/subtract red offset")
+DEFINE_UI_TOOLTIP(🔴 Red Shadows, "Adjust red shadows")
+DEFINE_UI_TOOLTIP(🔴 Red Midtones, "Adjust red midtone gamma")
+DEFINE_UI_TOOLTIP(🔴 Red Highlights, "Scale red highlights")
+DEFINE_UI_TOOLTIP(🟢 Green Offset, "Add/subtract green offset")
+DEFINE_UI_TOOLTIP(🟢 Green Shadows, "Adjust green shadows")
+DEFINE_UI_TOOLTIP(🟢 Green Midtones, "Adjust green midtone gamma")
+DEFINE_UI_TOOLTIP(🟢 Green Highlights, "Scale green highlights")
+DEFINE_UI_TOOLTIP(🔵 Blue Offset, "Add/subtract blue offset")
+DEFINE_UI_TOOLTIP(🔵 Blue Shadows, "Adjust blue shadows")
+DEFINE_UI_TOOLTIP(🔵 Blue Midtones, "Adjust blue midtone gamma")
+DEFINE_UI_TOOLTIP(🔵 Blue Highlights, "Scale blue highlights")
+DEFINE_UI_TOOLTIP(🔴🌙 Red Darken, "Red = min(Red, selected)")
+DEFINE_UI_TOOLTIP(🔴☀️ Red Lighten, "Red = max(Red, selected)")
+DEFINE_UI_TOOLTIP(🟢🌙 Green Darken, "Green = min(Green, selected)")
+DEFINE_UI_TOOLTIP(🟢☀️ Green Lighten, "Green = max(Green, selected)")
+DEFINE_UI_TOOLTIP(🔵🌙 Blue Darken, "Blue = min(Blue, selected)")
+DEFINE_UI_TOOLTIP(🔵☀️ Blue Lighten, "Blue = max(Blue, selected)")
+DEFINE_UI_TOOLTIP(🔴↔ Replace Red, "Set red from selected channel")
+DEFINE_UI_TOOLTIP(🟢↔ Replace Green, "Set green from selected channel")
+DEFINE_UI_TOOLTIP(🔵↔ Replace Blue, "Set blue from selected channel")
+DEFINE_UI_TOOLTIP(🗑️ Channel Removal, "Temporarily mute selected channel(s)")
+DEFINE_UI_TOOLTIP(🎞️ Output to Cineon Log, "View in Cineon log space (inspection)")
 
 
 
-// Helper functions (short notes)
-// The small functions below are building blocks used by the plugin. They are
-// safe for GPU use. For more technical details, contact info@fabiocolor.com.
-// Quick function map:
-// - safe_pow: per-channel gamma (keeps very dark pixels safe)
-// - applyLGGO: applies offset, shadows, midtones, highlights per channel
-// - applyFadeCorrection: gentle contrast and color boost for faded film
-// - linearToCineon: convert linear color to a film-log style for inspection
+// Helper functions used in the processing pipeline (GPU‑safe).
+// Map:
+// - safe_pow: power with base clamp
+// - applyLGGO: per‑channel Offset/Shadows/Midtones(γ)/Highlights
+// - applyFadeCorrection: gentle contrast/saturation recovery
+// - linearToCineon: linear → Cineon‑like log (inspection)
 
-// safe_pow: safe per-channel gamma. Keeps very small inputs from causing math
-// errors on the GPU by clamping the base before raising to a power.
+// safe_pow: power with base clamp to avoid NaNs.
 __DEVICE__ float safe_pow(float x, float y) { return _powf(_fmaxf(x, 1e-9f), y); }
 
-// applyLGGO: applies Offset, Shadows, Midtones, Highlights per channel. Use
-// this to fix color casts and shape contrast in shadows, midtones, and highlights.
-// Parameters:
-//   col       - input color
-//   offset    - per-channel additive offset
-//   shadows   - per-channel shadow adjustment (additive)
-//   midtones  - per-channel midtone exponent (1.0 = neutral)
-//   highlights- per-channel highlight scale (1.0 = neutral)
+// applyLGGO: per‑channel Offset/Shadows/Midtones(γ)/Highlights.
+//   col: input color
+//   offset: additive
+//   shadows: additive (shadows)
+//   midtones: exponent (1.0 = neutral)
+//   highlights: scale (1.0 = neutral)
 __DEVICE__ float3 applyLGGO(float3 col, float3 offset, float3 shadows, float3 midtones, float3 highlights) {
     col += offset;
     col += shadows;
@@ -178,10 +169,7 @@ __DEVICE__ float3 applyLGGO(float3 col, float3 offset, float3 shadows, float3 mi
     return col;
 }
 
-// applyFadeCorrection:
-// Gentle increase of contrast and color for faded film. It gives a small
-// midtone contrast boost and brings back some saturation while keeping overall
-// brightness similar.
+// applyFadeCorrection: midtone‑weighted contrast/saturation recovery; preserves overall brightness.
 __DEVICE__ float3 applyFadeCorrection(float3 col, float fadeCorrection) {
     if (fadeCorrection > 0.0f) {
         float luma = col.x * 0.2126f + col.y * 0.7152f + col.z * 0.0722f;
