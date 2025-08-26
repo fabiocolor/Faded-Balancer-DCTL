@@ -33,3 +33,6 @@ internal/
 
 # GitHub config (ignore to keep CI/templates local)
 .github/
+
+# Old version archives (use GitHub Releases instead)
+previous_versions/

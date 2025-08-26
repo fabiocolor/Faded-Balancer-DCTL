@@ -17,7 +17,7 @@ A DaVinci Resolve DCTL OFX plugin for balancing RGB channels and correcting fade
 
 ### Releases
 
-Versions are tracked on the GitHub Releases page. See release notes for changes and downloadable artifacts. Older public versions also remain under `previous_versions/`.
+Versions are tracked on the GitHub Releases page. See release notes for changes and downloadable artifacts.
 
 ---
 
