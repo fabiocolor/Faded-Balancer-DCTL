@@ -39,6 +39,7 @@ previous_versions/
 # Sensitive and repo infra to keep out of commits
 .env
 .github/
+!.github/FUNDING.yml
 # Note: ignoring .gitignore only prevents future changes from being tracked;
 # the current file remains in history and visible in the repo.
 .gitignore
