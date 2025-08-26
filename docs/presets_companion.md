@@ -1,83 +1,91 @@
-# Presets Companion
+# FadedBalancerOFX - Presets Companion
 
-Presets provide non‑destructive starting points for common fade scenarios. Select a preset, then refine controls as needed. UI values are not overwritten.
-
-Notes:
-- "Red Compress": reduce red mids/highs where cyan loss dominates.
-- "Balanced/Neutral": small shaping only.
-- "Heavy Red Crush": strong rescue; monitor clipping.
-- "Neg Offset Blue Cut": slight overall dip plus blue shadow reduction.
-- "Highlight Lift Blue Shadow": modest highlight lift and blue shadow softening.
+<p align="center">
+  <a href="../README.md">Home</a> •
+  <a href="BACKGROUND_FILM_FADING.md">Background & Science</a> •
+  <a href="FAQ.md">FAQ</a>
+</p>
 
 ---
 
-## Preset List (1 → 10)
+### About Presets
 
-### 1. Red Compress Mid
-Mild red mid control for common magenta shifts.
+The presets included with FadedBalancerOFX are designed to be **non-destructive starting points**. They do not move the UI sliders. When you select a preset, the correction is applied internally. If you switch back to `None`, your original image and UI settings are instantly restored.
 
-| Before | After |
-| :---: | :---: |
-| ![Red Compress Mid Before](../assets/before/RedCompressMid_before.png) | ![Red Compress Mid After](../assets/after/RedCompressMid_after.png) |
+This workflow allows you to:
+1.  Quickly test a corrective strategy.
+2.  Refine the result using the main UI controls.
+3.  Toggle between the preset and your manual grade without losing any work.
 
-### 2. Balanced Aggregate
-Neutral baseline.
+---
 
-| Before | After |
-| :---: | :---: |
-| ![Balanced Aggregate Before](../assets/before/BalancedAggregate_before.png) | ![Balanced Aggregate After](../assets/after/BalancedAggregate_after.png) |
+### Corrective Presets Guide
 
-### 3. Red Compress Hi Lift
-Red compress with modest highlight lift.
+These presets are designed to address common film fading scenarios, particularly the characteristic magenta cast caused by cyan dye failure.
 
-| Before | After |
-| :---: | :---: |
-| ![Red Compress Hi Lift Before](../assets/before/RedCompressHiLift_before.png) | ![Red Compress Hi Lift After](../assets/after/RedCompressHiLift_after.png) |
-
-### 4. Red Comp Blue Tweak
-Adds a small blue shadow dip.
-
-| Before | After |
-| :---: | :---: |
-| ![Red Comp Blue Tweak Before](../assets/before/RedCompBlueTweak_before.png) | ![Red Comp Blue Tweak After](../assets/after/RedCompBlueTweak_after.png) |
-
-### 5. Heavy Red Crush
-Strong red mid compression with highlight gain (watch clipping).
-
-| Before | After |
-| :---: | :---: |
-| ![Heavy Red Crush Before](../assets/before/heavyredcrush_before.png) | ![Heavy Red Crush After](../assets/after/heavyredcrush_after.png) |
-
-### 6. Mild Corrective
-Small overall correction with softer highlights.
+#### **Mild Corrective**
+> - **Goal:** A gentle starting point for slightly faded prints.
+> - **Action:** Applies a small amount of fade correction and subtly boosts the blue channel.
 
 | Before | After |
 | :---: | :---: |
 | ![Mild Corrective Before](../assets/before/MildCorrective_before.png) | ![Mild Corrective After](../assets/after/MildCorrective_after.png) |
 
-### 7. Neutral Red Mid Tweak
-Near‑neutral with light red mid compression.
+---
+
+#### **Balanced Aggregate**
+> - **Goal:** A generalized correction for moderately faded footage with a strong magenta cast.
+> - **Action:** Averages multiple corrective strategies for a robust, balanced result.
 
 | Before | After |
 | :---: | :---: |
-| ![Neutral Red Mid Tweak Before](../assets/before/NeutralRedMid%20Tweak_before.png) | ![Neutral Red Mid Tweak After](../assets/after/NeutralRedMid%20Tweak_after.png) |
+| ![Balanced Aggregate Before](../assets/before/BalancedAggregate_before.png) | ![Balanced Aggregate After](../assets/after/BalancedAggregate_after.png) |
 
-### 8. Strong Red Compress
-Deeper red compression for heavier fades.
+---
+
+#### **Strong Red Compress**
+> - **Goal:** Tame a dominant or clipped red channel.
+> - **Action:** Aggressively compresses the red channel's highlights and midtones.
 
 | Before | After |
 | :---: | :---: |
 | ![Strong Red Compress Before](../assets/before/StrongRedCompress_before.png) | ![Strong Red Compress After](../assets/after/StrongRedCompress_after.png) |
 
-### 9. Neg Offset Blue Cut
-Slight negative offset plus blue shadow suppression.
+---
+
+#### **Red Compress Mid**
+> - **Goal:** Address red channel dominance, focusing only on the midtones.
+> - **Action:** Compresses red midtones, which is useful when highlights are less of a problem.
 
 | Before | After |
 | :---: | :---: |
-| ![Neg Offset Blue Cut Before](../assets/before/NegOffsetBlueCut_before.png) | ![Neg Offset Blue Cut After](../assets/after/NegOffsetBlueCut_after.png) |
+| ![Red Compress Mid Before](../assets/before/RedCompressMid_before.png) | ![Red Compress Mid After](../assets/after/RedCompressMid_after.png) |
 
-### 10. Highlight Lift Blue Shadow
-Gentle highlight lift and softened blue shadows.
+---
+
+#### **Red Compress Hi Lift**
+> - **Goal:** Correct clipped red highlights while simultaneously lifting shadow detail.
+> - **Action:** Compresses red highlights and applies a lift to the red shadows.
+
+| Before | After |
+| :---: | :---: |
+| ![Red Compress Hi Lift Before](../assets/before/RedCompressHiLift_before.png) | ![Red Compress Hi Lift After](../assets/after/RedCompressHiLift_after.png) |
+
+---
+
+#### **Heavy Red Crush**
+> - **Goal:** An aggressive solution for extreme red channel dominance.
+> - **Action:** Severely darkens the red channel across its entire range. Use with caution.
+
+| Before | After |
+| :---: | :---: |
+| ![Heavy Red Crush Before](../assets/before/heavyredcrush_before.png) | ![Heavy Red Crush After](../assets/after/heavyredcrush_after.png) |
+
+---
+
+#### **Highlight Lift Blue Shadow**
+> - **Goal:** Correct a yellow or green cast by reintroducing blue into the image.
+> - **Action:** Lifts the global highlights while pushing blue into the shadows.
 
 | Before | After |
 | :---: | :---: |
@@ -85,21 +93,36 @@ Gentle highlight lift and softened blue shadows.
 
 ---
 
-## Selection & Use
-- If unsure, start with 2 (Balanced).
-- Strong magenta: 1, 3, or 8.
-- Dull highlights: 3 or 10.
-- Cool/noisy blue shadows: 4, 9, or 10.
-- Severe red loss: 5, then refine carefully.
+#### **Red Comp Blue Tweak**
+> - **Goal:** A nuanced correction for common magenta casts.
+> - **Action:** Compresses the red channel while subtly boosting blue midtones for a natural rebalance.
 
-After choosing:
-1) Fade Correction 0.10–0.30 (typical) for midtone lift.
-2) Enable Preserve Luminance if brightness drifts.
-3) Adjust per‑channel Midtones before heavy offset/highlight moves.
-4) Use Darken mixes only when one channel spikes.
+| Before | After |
+| :---: | :---: |
+| ![Red Comp Blue Tweak Before](../assets/before/RedCompBlueTweak_before.png) | ![Red Comp Blue Tweak After](../assets/after/RedCompBlueTweak_after.png) |
 
-Verification:
-- Parade neutral, no clipping (check Cineon view), memory colors reasonable.
+---
 
-## Share a Preset
-Email **info@fabiocolor.com** with subject "Preset submission" and include either a short text of changed parameters or a UI screenshot. Include license/consent (e.g., CC0 or attribution preference).
+#### **Neg Offset Blue Cut**
+> - **Goal:** Counteract a blue or cyan cast in the shadows, often seen in negative scans.
+> - **Action:** Lifts the overall image (negative offset) and cuts the blue channel's shadows.
+
+| Before | After |
+| :---: | :---: |
+| ![Neg Offset Blue Cut Before](../assets/before/NegOffsetBlueCut_before.png) | ![Neg Offset Blue Cut After](../assets/after/NegOffsetBlueCut_after.png) |
+
+---
+
+#### **Neutral Red Mid Tweak**
+> - **Goal:** A very subtle correction for minor red imbalances in otherwise good footage.
+> - **Action:** Slightly nudges the red midtones down to achieve a more perfect neutral.
+
+| Before | After |
+| :---: | :---: |
+| ![Neutral Red Mid Tweak Before](../assets/before/NeutralRedMid%20Tweak_before.png) | ![Neutral Red Mid Tweak After](../assets/after/NeutralRedMid%20Tweak_after.png) |
+
+---
+
+<p align="center">
+  <a href="../README.md">Back to Home</a>
+</p>

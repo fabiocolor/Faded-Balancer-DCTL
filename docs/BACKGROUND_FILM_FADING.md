@@ -1,50 +1,59 @@
-# Film Fading — Practical Background
+# FadedBalancerOFX - Background & Science
 
+<p align="center">
+  <a href="../README.md">Home</a> •
+  <a href="presets_companion.md">Presets Companion</a> •
+  <a href="FAQ.md">FAQ</a>
+</p>
 
+---
 
-## What Fading Is (brief)
-- Chromogenic color prints use three dye layers: cyan, magenta, yellow.
-- Dyes decay with time, temperature/humidity, and light exposure.
-- Typical result: reduced density/contrast and a magenta cast from cyan loss.
+### The Science of Film Fading
 
-## How It Appears on Scans
-- Image looks pink/magenta; midtones feel flat; blacks are lifted.
-- Parade scope: red and blue sit higher than green (R,B > G) through midtones.
-- Neutrals drift off gray; highlights can clip early if corrected aggressively.
+This document provides a brief, practical overview of why color film fades and the strategies FadedBalancerOFX employs to correct it.
 
-## Quick Assessment
-1) Identify a neutral patch (border, gray step, leader if present).
-2) Check the parade: are R and B tracking above G across midtones?
-3) Toggle Cineon view (log inspection) to assess highlight/shadow headroom.
-4) Note where the shift is strongest (shadows, mids, or highlights).
+### How Color Film Works
 
-## Correction Strategy (using FadedBalancerOFX)
-1) Preset: select the closest preset as a starting point.
-2) Fade Correction: apply a modest lift (typical 0.10–0.30) for midtone contrast/saturation.
-3) Global: make small offset/highlight adjustments to place the image.
-4) Per‑channel: target midtones first (especially red) to neutralize magenta; add green where needed rather than only cutting red.
-5) Preserve Luminance: enable if color moves shift overall brightness.
-6) Mixing (Darken/Lighten): calm spikes by taking min/max of channels; use sparingly.
-7) Replace/Removal: borrow/mute channels only for checks or severe dye loss.
-8) Cineon view: use for inspection; disable before final evaluation/exports.
+Most color motion picture film is **chromogenic**, meaning it creates color through a chemical process. It consists of multiple layers, but for the purpose of color, three are key. Each layer is sensitive to a primary color of light, and during development, it forms a dye of the complementary color.
 
-## Guardrails
-- Work in float; avoid clipping while shaping midtones.
-- Prefer midtone moves over large shadow lifts (noise amplification).
-- Keep changes modest and monotonic; avoid strong toggling between boosts/cuts.
-- State and convert input color space explicitly (scene‑linear vs log) when needed.
+| Light Sensitivity | Forms Dye |
+| :---: | :---: |
+| 🔵 Blue | 🟡 Yellow |
+| 🟢 Green | 🟣 Magenta |
+| 🔴 Red | 🇨🇳 Cyan |
 
-## Common Cases (quick cues)
-- Classic magenta shift: slightly reduce red midtones or boost green midtones; add a small blue darken in noisy/cool shadows.
-- Dull highlights: small global highlight scale and/or use presets 3 or 10.
-- Severe red dominance: use a “Red Compress” preset (1 or 8), then refine midtones; watch clipping.
+These three dyes (Cyan, Magenta, Yellow) are organic and inherently unstable. Over time, they chemically break down, causing the image to fade and shift in color.
 
-## Validation Checklist
-- Neutrals align (parade channels converge; a*≈0, b*≈0 if measured).
-- Restored density range without clipping (check with Cineon view).
-- Memory colors (skin, foliage) look plausible after small tweaks.
+### The "Magenta Cast" Problem
 
-## Further Reading (optional)
-- Digital “unfading” of chromogenic film: Trumpy et al., 2023 (open access summary).
-- EBU Tech 3285: preservation of colour photographic images (overview guidance).
-- Image Permanence Institute (IPI): practical storage and stability resources.
+While all dyes are unstable, the **cyan and yellow dyes are notoriously less stable** than the magenta dye. As they deteriorate at a faster rate, the image loses its blue and green information, leaving the more stable magenta dye to dominate the color balance.
+
+This phenomenon is especially common in certain film stocks, such as the Eastman color prints that were widely distributed in the 1970s and 1980s. The result is a characteristic **strong red or magenta cast**.
+
+This is the single most common type of color degradation in archival film, and it is the primary problem FadedBalancerOFX is designed to solve.
+
+**Example of Faded Film with a Magenta Cast:**
+![Captain Scene Before](../assets/before/captain_before.png)
+
+### Corrective Strategies in FadedBalancerOFX
+
+Because the original dye information is permanently lost from the film, a true restoration of the original colors is impossible. Instead, the goal is to **re-balance the remaining color channels** to achieve a neutral, believable image. This process is a form of digital approximation, using the remaining data to make an informed "guess" at the intended look.
+
+#### 1. Reduce the Dominant Channel
+The most direct approach is to reduce the strength of the red channel to bring it back in line with the green and blue channels.
+> - **Tools:** The per-channel `Red` sliders (Shadows, Midtones, Highlights) and several presets (`Strong Red Compress`, `Red Compress Mid`) are designed for this purpose.
+
+#### 2. Channel Mixing & Replacement
+In severe cases, the red channel may be too noisy, clipped, or degraded to be useful on its own. In these situations, we can "borrow" information from a healthier channel.
+> - **Mixing:** Operations like `Red = min(Red, Green)` can effectively darken the red channel where it appears unnaturally bright, reducing the color cast.
+> - **Replacement:** A more drastic step, `Red -> Green`, replaces the red channel's data entirely with the green channel's. This is highly effective at removing the cast but will alter the scene's original color palette.
+
+#### 3. The Fade Correction Algorithm
+The `Fade Correction` slider is an adaptive tool that analyzes the image to intelligently boost contrast and saturation.
+> - **Purpose:** It is designed to counteract the washed-out, low-contrast look that is typical of faded film. It serves as an excellent first step before making fine-tuned manual adjustments to individual color channels.
+
+---
+
+<p align="center">
+  <a href="../README.md">Back to Home</a>
+</p>
