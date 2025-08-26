@@ -1,38 +1,23 @@
 # FadedBalancerOFX
 
-![Version](https://img.shields.io/badge/version-v1.4.0-blue)
+![Release](https://img.shields.io/github/v/release/fabiocolor/Faded-Balancer-DCTL?include_prereleases&sort=semver)
 ![License](https://img.shields.io/badge/license-MIT-green)
 [![Donate](https://img.shields.io/badge/donate-PayPal-blue.svg)](https://paypal.me/fabiocolor)
 
 <p align="center">
   <a href="docs/BACKGROUND_FILM_FADING.md">Background & Science</a> •
   <a href="docs/presets_companion.md">Presets Companion</a> •
-  <a href="docs/FAQ.md">FAQ</a>
+  <a href="docs/FAQ.md">FAQ</a> •
+  <a href="https://github.com/fabiocolor/Faded-Balancer-DCTL/releases">Releases</a>
 </p>
 
 A DaVinci Resolve DCTL OFX plugin for balancing RGB channels and correcting faded film scans. It provides accessible and flexible tools for channel adjustment, mixing, and restoration preparation.
 
 ---
 
-### Version
+### Releases
 
-**Current: v1.4.0** (previous public base was v1.3.0; earlier versions in `previous_versions/`)
-
-#### What's New in v1.4.0
-- Added non-destructive preset system (10 starter corrective presets; toggling back to None restores baseline UI state).
-- Internal pipeline clarified (see Pipeline section) – ordering unchanged from spec; presets occur before global stage.
-- Minor doc clarifications; no processing math changes versus v1.3.0.
-
-#### What's New in v1.3.0
-- Added `Preserve Luminance` (⚖) – normalizes luma after per-channel stage only (global adjustments still shift exposure).
-- Renamed channel "Copy" operations to clearer **Replace** (e.g. "Replace Red → With Green").
-- Locked processing order: Global → Fade Correction → Per-Channel → Mixing → Replace → Removal → Output.
-- Consolidated UI/label/icon overhaul (option text simplification, Darken/Lighten composite combos, consistent icon set, duplicate definitions removed).
-
-#### What's New in v1.2.0
-- Removed final hard clamp to preserve full floating-point range during grading.
-- Added `Output to Cineon Log` checkbox to inspect and balance channels safely without clipping.
-- Added per-channel Offset controls (Red/Green/Blue) for finer pre-lift channel alignment.
+Versions are tracked on the GitHub Releases page. See release notes for changes and downloadable artifacts. Older public versions also remain under `previous_versions/`.
 
 ---
 
