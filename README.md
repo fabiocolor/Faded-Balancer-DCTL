@@ -1,4 +1,4 @@
-# FadedBalancerOFX
+# Faded Balancer DCTL
 
 <p align="center">
   <a href="https://github.com/sponsors/fabiocolor"><img src="https://img.shields.io/badge/Sponsor-❤️-red?style=for-the-badge" alt="Sponsor"></a>
@@ -11,12 +11,12 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/fabiocolor/Faded-Balancer-DCTL/releases/latest/download/FadedBalancerOFX.dctl">
+  <a href="https://github.com/fabiocolor/Faded-Balancer-DCTL/releases/latest/download/FadedBalancerDCTL.dctl">
     <img src="https://img.shields.io/badge/Download%20Latest%20DCTL-Click%20to%20Install-red?style=for-the-badge" alt="Download Latest .dctl">
   </a>
   <br/>
   <small>
-    Or visit <a href="https://github.com/fabiocolor/Faded-Balancer-DCTL/releases/latest">Latest Release</a> and download <code>FadedBalancerOFX.dctl</code> from Assets.
+    Or visit <a href="https://github.com/fabiocolor/Faded-Balancer-DCTL/releases/latest">Latest Release</a> and download <code>FadedBalancerDCTL.dctl</code> from Assets.
   </small>
 </p>
 
@@ -26,7 +26,7 @@
   <a href="docs/FAQ.md">FAQ</a>
 </p>
 
-A DaVinci Resolve DCTL OFX plugin for balancing RGB channels and correcting faded film scans. It provides accessible and flexible tools for channel adjustment, mixing, and restoration preparation.
+A DaVinci Resolve DCTL for balancing RGB channels and correcting faded film scans. It provides accessible and flexible tools for channel adjustment, mixing, and restoration preparation.
 
 ---
 
@@ -120,14 +120,14 @@ Here are a few examples showcasing the plugin's effectiveness in correcting fade
 
 ### Installation
 
-1.  Download `FadedBalancerOFX.dctl` using the red button above (direct link to the latest release asset), or from the Releases page:
-    - Direct: https://github.com/fabiocolor/Faded-Balancer-DCTL/releases/latest/download/FadedBalancerOFX.dctl
+1.  Download `FadedBalancerDCTL.dctl` using the red button above (direct link to the latest release asset), or from the Releases page:
+    - Direct: https://github.com/fabiocolor/Faded-Balancer-DCTL/releases/latest/download/FadedBalancerDCTL.dctl
     - Releases: https://github.com/fabiocolor/Faded-Balancer-DCTL/releases/latest (download the `.dctl` from Assets)
 2.  Place it in your DaVinci Resolve LUT folder:
 	-   **Windows:** `C:\ProgramData\Blackmagic Design\DaVinci Resolve\Support\LUT\`
 	-   **macOS:** `/Library/Application Support/Blackmagic Design/DaVinci Resolve/LUT/`
 3.  Restart DaVinci Resolve.
-4.  In the Color page, add a "DCTL" effect to a node and select `FadedBalancerOFX` from the dropdown menu.
+4.  In the Color page, add a "DCTL" effect to a node and select `FadedBalancerDCTL` from the dropdown menu.
 
 ---
 
@@ -135,7 +135,7 @@ Here are a few examples showcasing the plugin's effectiveness in correcting fade
 
 For a visual guide on how to use the plugin, check out the video tutorial below:
 
-[![FadedBalancerOFX Video Tutorial](https://img.youtube.com/vi/ATPkq5BHs-A/maxresdefault.jpg)](https://youtu.be/ATPkq5BHs-A)
+[![Faded Balancer DCTL Video Tutorial](https://img.youtube.com/vi/ATPkq5BHs-A/maxresdefault.jpg)](https://youtu.be/ATPkq5BHs-A)
 
 ---
 

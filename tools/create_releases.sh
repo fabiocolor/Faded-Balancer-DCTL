@@ -75,11 +75,10 @@ prev_tag=""
 save_ifs="$IFS"; IFS=$'\n'
 for tag in $tags; do
   [ -z "$tag" ] && continue
+  release_exists=0
   if [ "$PREVIEW" -eq 0 ] && command -v gh >/dev/null 2>&1; then
     if gh release view "$tag" >/dev/null 2>&1; then
-      echo "[skip] Release for $tag already exists"
-      prev_tag="$tag"
-      continue
+      release_exists=1
     fi
   fi
 
@@ -146,6 +145,22 @@ for tag in $tags; do
     fi
   fi
 
+  # Prepare DCTL asset from the tag's content
+  dctl_tmp=""
+  desired_asset_name="FadedBalancerDCTL.dctl"
+  # Candidates in tag history: prefer new name, fall back to old
+  for candidate in "FadedBalancerDCTL.dctl" "FadedBalancerOFX.dctl"; do
+    if git show "${tag}:${candidate}" >/dev/null 2>&1; then
+      dtmp_dir=$(mktemp -d)
+      dctl_tmp="${dtmp_dir}/${desired_asset_name}"
+      if git show "${tag}:${candidate}" > "$dctl_tmp"; then
+        break
+      else
+        rm -f "$dctl_tmp"; rmdir "$dtmp_dir" 2>/dev/null || true; dctl_tmp=""
+      fi
+    fi
+  done
+
   if [ "$PREVIEW" -eq 1 ]; then
     echo "---"
     echo "Tag: $tag"
@@ -156,16 +171,58 @@ for tag in $tags; do
       echo "Compare: (initial tag)"
     fi
     echo
+    if [ -n "$dctl_tmp" ]; then
+      size=$(wc -c < "$dctl_tmp" | tr -d ' ')
+      echo "Asset: ${desired_asset_name} (${size} bytes)"
+    else
+      echo "Asset: ${desired_asset_name} (not found in tag; will skip upload)"
+    fi
+    echo
     echo "Notes:"
     sed 's/^/  /' "$tmpfile"
   else
-    echo "[create] $tag"
-    gh release create "$tag" \
-      --title "$tag" \
-      --notes-file "$tmpfile"
+    if [ $release_exists -eq 1 ]; then
+      echo "[update] $tag (release exists; ensuring asset present)"
+    else
+      echo "[create] $tag"
+      gh release create "$tag" \
+        --title "$tag" \
+        --notes-file "$tmpfile"
+    fi
+
+    # Upload DCTL asset if available and not already present
+    if [ -n "$dctl_tmp" ]; then
+      asset_list=$(gh release view "$tag" --json assets -q '.assets[].name' 2>/dev/null || true)
+      if echo "$asset_list" | grep -qx "$desired_asset_name"; then
+        echo "[asset] ${desired_asset_name} already attached"
+      else
+        echo "[asset] uploading ${desired_asset_name}"
+        gh release upload "$tag" "${dctl_tmp}#${desired_asset_name}" --clobber >/dev/null
+      fi
+    else
+      echo "[asset] ${desired_asset_name} not found at tag; skipped"
+    fi
+
+    # Cleanup: remove any other assets except the desired DCTL asset
+    # Get repo nameWithOwner for gh api path
+    nwo=$(gh repo view --json nameWithOwner -q .nameWithOwner)
+    # Enumerate asset IDs and delete those not matching desired name
+    for asset_id in $(gh release view "$tag" --json assets -q '.assets[].id'); do
+      asset_name=$(gh api -H "Accept: application/vnd.github+json" \
+        repos/$nwo/releases/assets/$asset_id --jq .name 2>/dev/null || echo "")
+      if [ -n "$asset_name" ] && [ "$asset_name" != "$desired_asset_name" ]; then
+        echo "[asset] deleting stray asset: $asset_name"
+        gh api -X DELETE -H "Accept: application/vnd.github+json" \
+          repos/$nwo/releases/assets/$asset_id >/dev/null || true
+      fi
+    done
   fi
 
   rm -f "$tmpfile"
+  if [ -n "$dctl_tmp" ]; then
+    ddir=$(dirname "$dctl_tmp")
+    rm -f "$dctl_tmp"; rmdir "$ddir" 2>/dev/null || true
+  fi
   prev_tag="$tag"
 done
 IFS="$save_ifs"

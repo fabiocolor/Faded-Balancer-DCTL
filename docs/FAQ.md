@@ -1,4 +1,4 @@
-# FadedBalancerOFX - FAQ
+# Faded Balancer DCTL - FAQ
 
 <p align="center">
   <a href="../README.md">Home</a> •

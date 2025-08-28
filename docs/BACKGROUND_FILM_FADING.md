@@ -1,4 +1,4 @@
-# FadedBalancerOFX - Background & Science
+# Faded Balancer DCTL - Background & Science
 
 <p align="center">
   <a href="../README.md">Home</a> •
@@ -10,7 +10,7 @@
 
 ### The Science of Film Fading
 
-This document provides a brief, practical overview of why color film fades and the strategies FadedBalancerOFX employs to correct it.
+This document provides a brief, practical overview of why color film fades and the strategies Faded Balancer DCTL employs to correct it.
 
 ### How Color Film Works
 
@@ -37,12 +37,12 @@ While all dyes are unstable, the dyes in Eastman Color film stock, particularly 
 
 This phenomenon is especially common in certain film stocks, such as the **Eastman Color Print Film** widely used for theatrical distribution prints during that era. The result is a characteristic **strong red or magenta cast**, often referred to as the "pink fade." It wasn't until the early 1980s that more stable "Low Fade" stocks were introduced.
 
-This is the single most common type of color degradation in archival film, and it is the primary problem FadedBalancerOFX is designed to solve.
+This is the single most common type of color degradation in archival film, and it is the primary problem Faded Balancer DCTL is designed to solve.
 
 **Example of Faded Film with a Magenta Cast:**
 ![Captain Scene Before](../assets/before/captain_before.png)
 
-### Corrective Strategies in FadedBalancerOFX
+### Corrective Strategies in Faded Balancer DCTL
 
 Because the original dye information is permanently lost from the film, a true restoration of the original colors is impossible. Instead, the goal is to **re-balance the remaining color channels** to achieve a neutral, believable image. This process is a form of digital approximation, using the remaining data to make an informed "guess" at the intended look.
 

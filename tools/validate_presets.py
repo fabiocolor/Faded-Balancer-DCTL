@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Simple preset validator for FadedBalancerOFX presets.
+"""Simple preset validator for Faded Balancer DCTL presets.
 
 Checks that numeric preset values lie within the UI parameter ranges defined in
-`FadedBalancerOFX.dctl` and flags "very extreme" values (configurable).
+`FadedBalancerDCTL.dctl` and flags "very extreme" values (configurable).
 
 Usage:
     python3 tools/validate_presets.py presets/presets_auto.json

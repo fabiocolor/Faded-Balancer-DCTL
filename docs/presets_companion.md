@@ -1,4 +1,4 @@
-# FadedBalancerOFX - Presets Companion
+# Faded Balancer DCTL - Presets Companion
 
 <p align="center">
   <a href="../README.md">Home</a> •
@@ -10,7 +10,7 @@
 
 ### About Presets
 
-The presets included with FadedBalancerOFX are designed to be **non-destructive starting points**. They do not move the UI sliders. When you select a preset, the correction is applied internally. If you switch back to `None`, your original image and UI settings are instantly restored.
+The presets included with Faded Balancer DCTL are designed to be **non-destructive starting points**. They do not move the UI sliders. When you select a preset, the correction is applied internally. If you switch back to `None`, your original image and UI settings are instantly restored.
 
 This workflow allows you to:
 1.  Quickly test a corrective strategy.

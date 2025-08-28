@@ -1,5 +1,5 @@
 {
   "deprecation": {
-    "message": "External preset JSON list. The authoritative presets now live ONLY inside FadedBalancerOFX.dctl (v1.4.0). This placeholder remains so that any stale links resolve without exposing historical generation data. Do not reintroduce raw auto-generated JSON here. See docs/presets_companion.md for human guidance."
+    "message": "External preset JSON list. The authoritative presets now live ONLY inside FadedBalancerDCTL.dctl (v1.4.0). This placeholder remains so that any stale links resolve without exposing historical generation data. Do not reintroduce raw auto-generated JSON here. See docs/presets_companion.md for human guidance."
   }
 }

@@ -1,4 +1,4 @@
-// FadedBalancerOFX v1.4.0
+// FadedBalancerDCTL v1.4.0
 // DaVinci Resolve DCTL plugin to rebalance RGB for faded film scans.
 //
 // Pipeline (per-pixel): presets → global → fade → per-channel → (optional preserve luminance) → mixing (darken/lighten) → replace → removal → (optional linear→Cineon) output
