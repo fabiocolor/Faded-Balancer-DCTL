@@ -204,18 +204,20 @@ for tag in $tags; do
     fi
 
     # Cleanup: remove any other assets except the desired DCTL asset
-    # Get repo nameWithOwner for gh api path
+    # Use names and IDs from a single listing to avoid extra GETs
     nwo=$(gh repo view --json nameWithOwner -q .nameWithOwner)
-    # Enumerate asset IDs and delete those not matching desired name
-    for asset_id in $(gh release view "$tag" --json assets -q '.assets[].id'); do
-      asset_name=$(gh api -H "Accept: application/vnd.github+json" \
-        repos/$nwo/releases/assets/$asset_id --jq .name 2>/dev/null || echo "")
-      if [ -n "$asset_name" ] && [ "$asset_name" != "$desired_asset_name" ]; then
+    while IFS=$'\t' read -r asset_name asset_id; do
+      [ -z "$asset_id" ] && continue
+      if [ "$asset_name" != "$desired_asset_name" ]; then
         echo "[asset] deleting stray asset: $asset_name"
-        gh api -X DELETE -H "Accept: application/vnd.github+json" \
-          repos/$nwo/releases/assets/$asset_id >/dev/null || true
+        if gh api -X DELETE -H "Accept: application/vnd.github+json" \
+            repos/$nwo/releases/assets/$asset_id >/dev/null 2>&1; then
+          echo "[asset] deleted: $asset_name"
+        else
+          echo "[asset] could not delete (possibly already removed): $asset_name"
+        fi
       fi
-    done
+    done < <(gh release view "$tag" --json assets -q '.assets[] | [.name, .id] | @tsv' 2>/dev/null)
   fi
 
   rm -f "$tmpfile"
