@@ -1,5 +1,6 @@
 # Local developer files
 .githooks/
+.ai_agents/
 .venv/
 venv/
 
