@@ -12,7 +12,7 @@
 
 <p align="center">
   <a href="https://github.com/fabiocolor/Faded-Balancer-DCTL/releases/latest/download/FadedBalancerDCTL.dctl">
-    <img src="https://img.shields.io/badge/Download%20Latest%20DCTL-Click%20to%20Install-red?style=for-the-badge" alt="Download Latest .dctl">
+    <img src="https://img.shields.io/badge/Download%20Latest%20Release-Here-red?style=for-the-badge" alt="Download Latest Release">
   </a>
   <br/>
   <small>
