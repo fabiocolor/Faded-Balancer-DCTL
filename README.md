@@ -11,6 +11,16 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/fabiocolor/Faded-Balancer-DCTL/releases/latest/download/FadedBalancerOFX.dctl">
+    <img src="https://img.shields.io/badge/Download%20Latest%20DCTL-Click%20to%20Install-red?style=for-the-badge" alt="Download Latest .dctl">
+  </a>
+  <br/>
+  <small>
+    Or visit <a href="https://github.com/fabiocolor/Faded-Balancer-DCTL/releases/latest">Latest Release</a> and download <code>FadedBalancerOFX.dctl</code> from Assets.
+  </small>
+</p>
+
+<p align="center">
   <a href="docs/BACKGROUND_FILM_FADING.md">Background & Science</a> •
   <a href="docs/presets_companion.md">Presets Companion</a> •
   <a href="docs/FAQ.md">FAQ</a>
@@ -110,7 +120,9 @@ Here are a few examples showcasing the plugin's effectiveness in correcting fade
 
 ### Installation
 
-1.  Download `FadedBalancerOFX.dctl`.
+1.  Download `FadedBalancerOFX.dctl` using the red button above (direct link to the latest release asset), or from the Releases page:
+    - Direct: https://github.com/fabiocolor/Faded-Balancer-DCTL/releases/latest/download/FadedBalancerOFX.dctl
+    - Releases: https://github.com/fabiocolor/Faded-Balancer-DCTL/releases/latest (download the `.dctl` from Assets)
 2.  Place it in your DaVinci Resolve LUT folder:
 	-   **Windows:** `C:\ProgramData\Blackmagic Design\DaVinci Resolve\Support\LUT\`
 	-   **macOS:** `/Library/Application Support/Blackmagic Design/DaVinci Resolve/LUT/`
