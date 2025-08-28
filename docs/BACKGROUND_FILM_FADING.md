@@ -14,7 +14,14 @@ This document provides a brief, practical overview of why color film fades and t
 
 ### How Color Film Works
 
-Most color motion picture film is **chromogenic**, meaning it creates color through a chemical process. It consists of multiple layers, but for the purpose of color, three are key. Each layer is sensitive to a primary color of light, and during development, it forms a dye of the complementary color.
+Most color motion picture film is **chromogenic**, meaning it creates color through a chemical process. A prominent example of this is the **Eastman Color** process, developed by Kodak in 1950. This process uses a multilayer film (an Integral Tripack) where three key layers, each sensitive to a primary color of light, are exposed in a standard camera.
+
+During development, a process called **dye-coupling** occurs. A special developing agent combines with color-forming couplers in each layer to create dyes of the complementary color. The concentration of the dye is proportional to the amount of silver in the image, and the silver is removed later in the process.
+
+The following diagram illustrates the structure of Eastman Color Print Film Type 5381, showing the different emulsion layers.
+
+![Structure of Eastman Color Print Film](../assets/diagrams/Craig_Eastman-Color_1953-plate-2b.png)
+*Source: Craig Eastman (1953), Plate 2b. More historical diagrams can be found in the Eastman Color gallery on [filmcolors.org](https://filmcolors.org/galleries/eastmancolor-illustrations/).*
 
 | Light Sensitivity | Forms Dye |
 | :---: | :---: |
@@ -26,9 +33,9 @@ These three dyes (Cyan, Magenta, Yellow) are organic and inherently unstable. Ov
 
 ### The "Magenta Cast" Problem
 
-While all dyes are unstable, the **cyan and yellow dyes are notoriously less stable** than the magenta dye. As they deteriorate at a faster rate, the image loses its blue and green information, leaving the more stable magenta dye to dominate the color balance.
+While all dyes are unstable, the dyes in Eastman Color film stock, particularly from the 1950s to the early 1980s, were known for their chemical instability. The **cyan and yellow dyes are notoriously less stable** than the magenta dye. As they deteriorate at a faster rate, the image loses its blue and green information, leaving the more stable magenta dye to dominate the color balance.
 
-This phenomenon is especially common in certain film stocks, such as the Eastman color prints that were widely distributed in the 1970s and 1980s. The result is a characteristic **strong red or magenta cast**.
+This phenomenon is especially common in certain film stocks, such as the **Eastman Color Print Film** widely used for theatrical distribution prints during that era. The result is a characteristic **strong red or magenta cast**, often referred to as the "pink fade." It wasn't until the early 1980s that more stable "Low Fade" stocks were introduced.
 
 This is the single most common type of color degradation in archival film, and it is the primary problem FadedBalancerOFX is designed to solve.
 
