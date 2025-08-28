@@ -2,6 +2,7 @@
 
 <p align="center">
   <a href="https://github.com/sponsors/fabiocolor"><img src="https://img.shields.io/badge/Sponsor-❤️-red?style=for-the-badge" alt="Sponsor"></a>
+  <a href="https://paypal.me/fabiocolor"><img src="https://img.shields.io/badge/Donate-PayPal-blue?style=for-the-badge" alt="Donate"></a>
 </p>
 
 <p align="center">
@@ -93,6 +94,18 @@ Here are a few examples showcasing the plugin's effectiveness in correcting fade
 | :---: | :---: |
 | ![Table Scene Before](assets/before/table_before.png) | ![Table Scene After](assets/after/table_after.png) |
 
+**Example 4: Boy Scene**
+
+| Before | After |
+| :---: | :---: |
+| ![Boy Scene Before](assets/before/boy_before.png) | ![Boy Scene After](assets/after/boy_after.png) |
+
+**Example 5: Night Scene**
+
+| Before | After |
+| :---: | :---: |
+| ![Night Scene Before](assets/before/night_before.png) | ![Night Scene After](assets/after/night_after.png) |
+
 ---
 
 ### Installation
@@ -116,13 +129,14 @@ For a visual guide on how to use the plugin, check out the video tutorial below:
 
 ### Community & Support
 
--   **Discussions:** Have a question, an idea, or want to share your work? [Join the community discussions!](https://github.com/fabiocolor/Faded-Balancer-DCTL/discussions)
+
 -   **Contact:** For direct inquiries, you can reach out via [Email](mailto:info@fabiocolor.com) or connect on [Instagram](https://www.instagram.com/fabiocolor), [LinkedIn](https://www.linkedin.com/in/fabiobedoya/), or [YouTube](https://www.youtube.com/@fabiocolor).
 
 If you find this plugin useful and would like to support its ongoing development, please consider making a donation. Your support is greatly appreciated!
 
 <p align="center">
   <a href="https://github.com/sponsors/fabiocolor"><img src="https://img.shields.io/badge/Sponsor-❤️-red?style=for-the-badge" alt="Sponsor"></a>
+  <a href="https://paypal.me/fabiocolor"><img src="https://img.shields.io/badge/Donate-PayPal-blue?style=for-the-badge" alt="Donate"></a>
 </p>
 
 ---

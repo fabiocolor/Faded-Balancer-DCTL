@@ -12,7 +12,11 @@
 
 **Why don't the UI sliders move when I select a preset?**
 
-> This is by design to ensure a non-destructive workflow. Presets operate on temporary internal variables, leaving your existing slider adjustments untouched. This allows you to apply and toggle presets without losing your manual settings. The preset is applied *before* your slider adjustments in the image processing pipeline.
+> This is a current limitation of the DCTL format, which does not allow an effect to modify its own UI sliders.
+> 
+> However, this limitation results in a non-destructive workflow. Presets operate on temporary internal variables, leaving your existing slider adjustments untouched. This allows you to apply and toggle presets without losing your manual settings. The preset is applied *before* your slider adjustments in the image processing pipeline.
+> 
+> A future version of this tool as a native OpenFX plugin may overcome this limitation and have the sliders update when a preset is selected.
 
 **What does the `Preserve Luminance` checkbox do?**
 
