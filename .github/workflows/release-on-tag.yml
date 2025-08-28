@@ -1,0 +1,27 @@
+name: Release on tag
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # ensure tags and history for notes/compare
+
+      - name: Create GitHub Release for tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Ref: $GITHUB_REF"
+          echo "Tag: $GITHUB_REF_NAME"
+          chmod +x tools/create_releases.sh
+          ./tools/create_releases.sh

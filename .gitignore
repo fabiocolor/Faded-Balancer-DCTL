@@ -41,6 +41,7 @@ previous_versions/
 .env
 .github/
 !.github/FUNDING.yml
+!.github/workflows/
 # Note: ignoring .gitignore only prevents future changes from being tracked;
 # the current file remains in history and visible in the repo.
 .gitignore
