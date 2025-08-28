@@ -23,7 +23,8 @@
 <p align="center">
   <a href="docs/BACKGROUND_FILM_FADING.md">Background & Science</a> •
   <a href="docs/presets_companion.md">Presets Companion</a> •
-  <a href="docs/FAQ.md">FAQ</a>
+  <a href="docs/FAQ.md">FAQ</a> •
+  <a href="https://github.com/fabiocolor/Faded-Balancer-DCTL/discussions">Discussions</a>
 </p>
 
 A DaVinci Resolve DCTL for balancing RGB channels and correcting faded film scans. It provides accessible and flexible tools for channel adjustment, mixing, and restoration preparation.
@@ -141,7 +142,7 @@ For a visual guide on how to use the plugin, check out the video tutorial below:
 
 ### Community & Support
 
-
+-   **Discussions:** Share ideas, ask questions, or suggest features in the GitHub Discussions: https://github.com/fabiocolor/Faded-Balancer-DCTL/discussions
 -   **Contact:** For direct inquiries, you can reach out via [Email](mailto:info@fabiocolor.com) or connect on [Instagram](https://www.instagram.com/fabiocolor), [LinkedIn](https://www.linkedin.com/in/fabiobedoya/), or [YouTube](https://www.youtube.com/@fabiocolor).
 
 If you find this plugin useful and would like to support its ongoing development, please consider making a donation. Your support is greatly appreciated!
