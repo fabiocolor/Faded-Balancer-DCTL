@@ -87,43 +87,43 @@ The image is processed through the following steps in a fixed order:
 
 Here are a few examples showcasing the plugin's effectiveness in correcting faded film scans.
 
-**Example 1: Captain Scene**
+**Example 1: Night Scene**
 
 | Before | After |
 | :---: | :---: |
-| ![Captain Scene Before](assets/before/captain_before.png) | ![Captain Scene After](assets/after/captain_after.png) |
+| ![Night Scene Before](assets/before/night_before.png) | ![Night Scene After](assets/after/night_after.png) |
 
-**Example 2: Beach Scene**
-
-| Before | After |
-| :---: | :---: |
-| ![Beach Scene Before](assets/before/beach_before.png) | ![Beach Scene After](assets/after/beach_after.png) |
-
-**Example 3: Table Scene**
-
-| Before | After |
-| :---: | :---: |
-| ![Table Scene Before](assets/before/table_before.png) | ![Table Scene After](assets/after/table_after.png) |
-
-**Example 4: Boy Scene**
+**Example 2: Boy Scene**
 
 | Before | After |
 | :---: | :---: |
 | ![Boy Scene Before](assets/before/boy_before.png) | ![Boy Scene After](assets/after/boy_after.png) |
 
-**Example 5: Night Scene**
+**Example 3: Captain Scene**
 
 | Before | After |
 | :---: | :---: |
-| ![Night Scene Before](assets/before/night_before.png) | ![Night Scene After](assets/after/night_after.png) |
+| ![Captain Scene Before](assets/before/captain_before.png) | ![Captain Scene After](assets/after/captain_after.png) |
+
+**Example 4: Beach Scene**
+
+| Before | After |
+| :---: | :---: |
+| ![Beach Scene Before](assets/before/beach_before.png) | ![Beach Scene After](assets/after/beach_after.png) |
+
+**Example 5: Table Scene**
+
+| Before | After |
+| :---: | :---: |
+| ![Table Scene Before](assets/before/table_before.png) | ![Table Scene After](assets/after/table_after.png) |
 
 ---
 
 ### Installation
 
 1.  Download `FadedBalancerDCTL.dctl` using the red button above (direct link to the latest release asset), or from the Releases page:
-    - Direct: https://github.com/fabiocolor/Faded-Balancer-DCTL/releases/latest/download/FadedBalancerDCTL.dctl
-    - Releases: https://github.com/fabiocolor/Faded-Balancer-DCTL/releases/latest (download the `.dctl` from Assets)
+    - Direct: [Latest `.dctl` download](https://github.com/fabiocolor/Faded-Balancer-DCTL/releases/latest/download/FadedBalancerDCTL.dctl)
+    - Releases: [Latest Release](https://github.com/fabiocolor/Faded-Balancer-DCTL/releases/latest) (download the `.dctl` from Assets)
 2.  Place it in your DaVinci Resolve LUT folder:
 	-   **Windows:** `C:\ProgramData\Blackmagic Design\DaVinci Resolve\Support\LUT\`
 	-   **macOS:** `/Library/Application Support/Blackmagic Design/DaVinci Resolve/LUT/`
@@ -142,7 +142,7 @@ For a visual guide on how to use the plugin, check out the video tutorial below:
 
 ### Community & Support
 
--   **Discussions:** Share ideas, ask questions, or suggest features in the GitHub Discussions: https://github.com/fabiocolor/Faded-Balancer-DCTL/discussions
+-   **Discussions:** Share ideas, ask questions, or suggest features in the [GitHub Discussions](https://github.com/fabiocolor/Faded-Balancer-DCTL/discussions).
 -   **Contact:** For direct inquiries, you can reach out via [Email](mailto:info@fabiocolor.com) or connect on [Instagram](https://www.instagram.com/fabiocolor), [LinkedIn](https://www.linkedin.com/in/fabiobedoya/), or [YouTube](https://www.youtube.com/@fabiocolor).
 
 If you find this plugin useful and would like to support its ongoing development, please consider making a donation. Your support is greatly appreciated!
