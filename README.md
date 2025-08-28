@@ -132,6 +132,12 @@ Here are a few examples showcasing the plugin's effectiveness in correcting fade
 
 ---
 
+### Sample Footage
+
+- Download test footage to try the DCTL quickly: [Archive.org — Film BAR: 70 Trailers Reel (1440x1080, 24fps)](https://archive.org/details/film-bar-70-trailers-reel-1440x-1080-24fps)
+
+---
+
 ### Video Demonstration
 
 For a visual guide on how to use the plugin, check out the video tutorial below:
