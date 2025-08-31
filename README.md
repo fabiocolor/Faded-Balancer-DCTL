@@ -33,7 +33,7 @@ A DaVinci Resolve DCTL for balancing RGB channels and correcting faded film scan
 
 ### Version
 
-**Current: v1.4.0** (previous public base was v1.3.0; earlier versions in `previous_versions/`)
+**Current: v1.4.0**
 
 #### What's New in v1.4.0
 - Added non-destructive preset system (10 starter corrective presets; toggling back to None restores baseline UI state).
@@ -78,8 +78,6 @@ The image is processed through the following steps in a fixed order:
 7.  **➡️ Replace** (Explicit channel copy)
 8.  **❌ Removal** (Zero out channels)
 9.  **📜 Optional Output to Cineon Log**
-
-*Identity: Defaults with preset=None produce output ≈ input (floating point tolerance).*
 
 ---
 
