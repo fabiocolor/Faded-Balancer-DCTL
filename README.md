@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-v1.4.0-blue" alt="Version">
+  <img src="https://img.shields.io/badge/version-v1.5.0-blue" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="License">
 </p>
 
@@ -33,7 +33,11 @@ A DaVinci Resolve DCTL for balancing RGB channels and correcting faded film scan
 
 ### Version
 
-**Current: v1.4.0**
+**Current: v1.5.0**
+
+#### What's New in v1.5.0
+- **New Channel Mixer**: RGB matrix mixing for advanced highlight recovery and channel reconstruction
+- Cross-channel boost controls enable rebuilding clipped channels using data from other channels
 
 #### What's New in v1.4.0
 - Added non-destructive preset system (10 starter corrective presets; toggling back to None restores baseline UI state).
@@ -58,7 +62,7 @@ A DaVinci Resolve DCTL for balancing RGB channels and correcting faded film scan
 -   **Film Fade Correction:** A dedicated tool to correct faded footage by adaptively enhancing contrast and saturation.
 -   **Global & Per-Channel Balance:** Adjust Lift, Gamma, and Gain for all channels together or individually.
 -   **Preserve Luminance (⚖):** Optional re-normalization of luma after per-channel adjustments.
--   **Channel Mixing:** Min/Max composites (e.g., `Red = min(Red, Green)` or `Blue = max(Blue, Green)`).
+-   **Channel Mixer & Highlight Boost:** RGB matrix mixing for highlight recovery (e.g., boost clipped red channel using green/blue data) plus Min/Max composites.
 -   **Channel Replace & Removal:** Replace a channel's data with another or remove a channel entirely.
 -   **Optional Cineon Output:** Linear → Cineon-like log inspection mode.
 -   **Presets (v1.4.0):** Non-destructive internal presets. See `docs/presets_companion.md` for details.
@@ -74,10 +78,11 @@ The image is processed through the following steps in a fixed order:
 3.  **✨ Fade Correction** (Contrast + Saturation nudge)
 4.  **🎨 Per-Channel Adjust** (R/G/B)
 5.  **⚖️ Optional Preserve Luminance** (Post per-channel only)
-6.  **🔄 Mixing** (Darken / Lighten via min/max)
-7.  **➡️ Replace** (Explicit channel copy)
-8.  **❌ Removal** (Zero out channels)
-9.  **📜 Optional Output to Cineon Log**
+6.  **📈 Channel Mixer** (RGB matrix for highlight boost)
+7.  **🔄 Mixing** (Darken / Lighten via min/max)
+8.  **➡️ Replace** (Explicit channel copy)
+9.  **❌ Removal** (Zero out channels)
+10. **📜 Optional Output to Cineon Log**
 
 ---
 
