@@ -51,8 +51,20 @@
 **What is the difference between Channel Mixing and Channel Replacement?**
 
 > **Mixing** combines channels using `min` (Darken) or `max` (Lighten) composite operations. For example, `Red = min(Red, Green)` will darken the red channel wherever it is brighter than the green channel. This is useful for subtle corrections.
-> 
+>
 > **Replacement** completely overwrites the pixel values of one channel with another (e.g., `Red -> Green` makes the red channel's data identical to the green channel's). This is a more aggressive tool, best used for correcting severe color casts where one channel is almost entirely gone.
+
+**How do the new shadow/highlight mixing controls work? (v1.6.0)**
+
+> The **🎭 Mixing Shadows** and **🎭 Mixing Highlights** sliders control where darken/lighten operations take effect in the image. Set to `1.0` for full effect in that tonal range, `0.0` for no effect.
+>
+> **Example:** If blue is damaged only in shadows, set "Blue Darken With Green", then "Mixing Shadows = 1.0" and "Mixing Highlights = 0.0". This repairs blue shadows using green data while leaving highlights untouched.
+>
+> This is perfect for film restoration where damage often occurs in specific tonal ranges.
+
+**What does Channel Preview do? (v1.6.0)**
+
+> **👁️ Channel Preview** lets you isolate individual channels (Red Only, Green Only, Blue Only) to inspect damage without using keyboard shortcuts. Essential for film restoration workflow to see exactly which channels need repair. Set back to "Normal" for standard color view.
 
 ---
 

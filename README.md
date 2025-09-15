@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-v1.5.0-blue" alt="Version">
+  <img src="https://img.shields.io/badge/version-v1.6.0-blue" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="License">
 </p>
 
@@ -33,7 +33,16 @@ A DaVinci Resolve DCTL for balancing RGB channels and correcting faded film scan
 
 ### Version
 
-**Current: v1.5.0**
+**Current: v1.6.0**
+
+#### What's New in v1.6.0
+- **Enhanced Channel Mixing**: Added shadow/highlight targeting for darken/lighten operations
+  - **🎭 Mixing Shadows**: Control how much mixing affects shadow areas (0-1)
+  - **🎭 Mixing Highlights**: Control how much mixing affects highlight areas (0-1)
+  - Perfect for selective film restoration (e.g., repair blue damage only in shadows)
+- **👁️ Channel Preview**: Toggle between Normal, Red Only, Green Only, Blue Only isolation modes
+  - Essential for film restoration workflow - inspect individual channels without keybindings
+- **Improved Pipeline**: Streamlined processing with better tonal masking algorithms
 
 #### What's New in v1.5.0
 - **New Channel Mixer**: RGB matrix mixing for advanced highlight recovery and channel reconstruction
@@ -63,6 +72,8 @@ A DaVinci Resolve DCTL for balancing RGB channels and correcting faded film scan
 -   **Global & Per-Channel Balance:** Adjust Lift, Gamma, and Gain for all channels together or individually.
 -   **Preserve Luminance (⚖):** Optional re-normalization of luma after per-channel adjustments.
 -   **Channel Mixer & Highlight Boost:** RGB matrix mixing for highlight recovery (e.g., boost clipped red channel using green/blue data) plus Min/Max composites.
+-   **Enhanced Channel Mixing (v1.6.0):** Shadow/highlight targeting for precise tonal control of darken/lighten operations.
+-   **Channel Preview (v1.6.0):** Individual channel isolation (Red/Green/Blue Only) for inspection without keybindings.
 -   **Channel Replace & Removal:** Replace a channel's data with another or remove a channel entirely.
 -   **Optional Cineon Output:** Linear → Cineon-like log inspection mode.
 -   **Presets (v1.4.0):** Non-destructive internal presets. See `docs/presets_companion.md` for details.
@@ -79,10 +90,11 @@ The image is processed through the following steps in a fixed order:
 4.  **🎨 Per-Channel Adjust** (R/G/B)
 5.  **⚖️ Optional Preserve Luminance** (Post per-channel only)
 6.  **📈 Channel Mixer** (RGB matrix for highlight boost)
-7.  **🔄 Mixing** (Darken / Lighten via min/max)
+7.  **🎭 Enhanced Mixing** (Darken / Lighten with shadow/highlight targeting)
 8.  **➡️ Replace** (Explicit channel copy)
 9.  **❌ Removal** (Zero out channels)
-10. **📜 Optional Output to Cineon Log**
+10. **👁️ Channel Preview** (Isolation for inspection)
+11. **📜 Optional Output to Cineon Log**
 
 ---
 

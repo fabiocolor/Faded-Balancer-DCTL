@@ -1,7 +1,7 @@
-// FadedBalancerDCTL v1.5.0
+// FadedBalancerDCTL v1.6.0
 // DaVinci Resolve DCTL plugin to rebalance RGB for faded film scans.
 //
-// Pipeline (per-pixel): presets → global → fade → per-channel → (optional preserve luminance) → channel mixer → mixing (darken/lighten) → replace → removal → (optional linear→Cineon) output
+// Pipeline (per-pixel): presets → global → fade → per-channel → (optional preserve luminance) → channel mixer → enhanced mixing (darken/lighten + shadow/highlight masks) → replace → removal → channel isolation → (optional linear→Cineon) output
 //
 // Notes (concise):
 // - Preserve Luminance: re‑normalize luma after per‑channel adjustments.
@@ -69,9 +69,23 @@ DEFINE_UI_PARAMS(presetMode, Preset, DCTLUI_COMBO_BOX, 0, { PRESET_NONE, PRESET_
 #define REM_BLUE 3
 #define REM_ALL  4
 
+// Channel isolation enums (for preview)
+#define ISO_NONE  0
+#define ISO_RED   1
+#define ISO_GREEN 2
+#define ISO_BLUE  3
+
 
 // Global controls
 DEFINE_UI_PARAMS(fadeCorrection, ✨ Fade Correction, DCTLUI_SLIDER_FLOAT, 0.0f, 0.0f, 1.0f, 0.001f)
+
+// Enhanced mixing controls with shadow/highlight targeting
+DEFINE_UI_PARAMS(mixingShadowsStrength, 🎭 Mixing Shadows, DCTLUI_SLIDER_FLOAT, 1.0f, 0.0f, 1.0f, 0.001f)
+DEFINE_UI_PARAMS(mixingHighlightsStrength, 🎭 Mixing Highlights, DCTLUI_SLIDER_FLOAT, 1.0f, 0.0f, 1.0f, 0.001f)
+
+// Channel isolation for preview
+DEFINE_UI_PARAMS(channelIsolation, 👁️ Channel Preview, DCTLUI_COMBO_BOX, 0, { ISO_NONE, ISO_RED, ISO_GREEN, ISO_BLUE }, { Normal, Red Only, Green Only, Blue Only })
+
 DEFINE_UI_PARAMS(globalOffset,   🌐 Global Offset,   DCTLUI_SLIDER_FLOAT, 0.0f, -0.5f, 0.5f, 0.001f)
 DEFINE_UI_PARAMS(globalShadows,  🌑 Global Shadows,  DCTLUI_SLIDER_FLOAT, 0.0f, -0.5f, 0.5f, 0.001f)
 DEFINE_UI_PARAMS(globalMidtones, 🌓 Global Midtones, DCTLUI_SLIDER_FLOAT, 1.0f,  0.1f, 3.0f, 0.001f)
@@ -122,6 +136,9 @@ DEFINE_UI_PARAMS(outputToCineon, 🎞️ Output to Cineon Log, DCTLUI_CHECK_BOX,
 // the UI LABEL token (not the parameter identifier) per vendor macro spec.
 DEFINE_UI_TOOLTIP(Preset, "Starting looks for faded film")
 DEFINE_UI_TOOLTIP(✨ Fade Correction, "Restore contrast & color fade")
+DEFINE_UI_TOOLTIP(🎭 Mixing Shadows, "Apply darken/lighten only in shadows")
+DEFINE_UI_TOOLTIP(🎭 Mixing Highlights, "Apply darken/lighten only in highlights")
+DEFINE_UI_TOOLTIP(👁️ Channel Preview, "Isolate single channel for preview")
 DEFINE_UI_TOOLTIP(🌐 Global Offset, "Raise or lower whole image")
 DEFINE_UI_TOOLTIP(🌑 Global Shadows, "Lift or deepen shadows")
 DEFINE_UI_TOOLTIP(🌓 Global Midtones, "Adjust mid contrast")
@@ -212,6 +229,66 @@ __DEVICE__ float linearToCineon(float linear) {
     return _fmaxf(0.0f, _fminf(mapped, 1.0f));
 }
 
+// applyEnhancedMixing: apply darken/lighten operations with shadow/highlight targeting
+// Uses luminance masks to selectively apply mixing operations to specific tonal ranges
+__DEVICE__ float3 applyEnhancedMixing(float3 col,
+    int redDarken, int redLighten, int greenDarken, int greenLighten, int blueDarken, int blueLighten,
+    float shadowStrength, float highlightStrength) {
+
+    // Calculate luminance for tonal range detection
+    float luma = col.x * 0.2126f + col.y * 0.7152f + col.z * 0.0722f;
+
+    // Create smooth shadow/highlight masks
+    float shadowMask = 1.0f - luma * luma;  // Stronger in shadows, weaker in highlights
+    float highlightMask = luma * luma;      // Stronger in highlights, weaker in shadows
+
+    // Apply user control over shadow/highlight targeting
+    shadowMask *= shadowStrength;
+    highlightMask *= highlightStrength;
+
+    // Calculate total mixing mask
+    float mixingMask = shadowMask + highlightMask;
+    mixingMask = _fmaxf(0.0f, _fminf(1.0f, mixingMask));  // Clamp to [0,1]
+
+    // Store original values
+    float3 originalRGB = col;
+    float3 mixedRGB = col;
+
+    // Apply standard mixing operations
+    if (redDarken == 1) mixedRGB.x = _fminf(mixedRGB.x, mixedRGB.y);      // Red darken with green
+    else if (redDarken == 2) mixedRGB.x = _fminf(mixedRGB.x, mixedRGB.z); // Red darken with blue
+
+    if (redLighten == 1) mixedRGB.x = _fmaxf(mixedRGB.x, mixedRGB.y);     // Red lighten with green
+    else if (redLighten == 2) mixedRGB.x = _fmaxf(mixedRGB.x, mixedRGB.z); // Red lighten with blue
+
+    if (greenDarken == 1) mixedRGB.y = _fminf(mixedRGB.y, mixedRGB.x);    // Green darken with red
+    else if (greenDarken == 2) mixedRGB.y = _fminf(mixedRGB.y, mixedRGB.z); // Green darken with blue
+
+    if (greenLighten == 1) mixedRGB.y = _fmaxf(mixedRGB.y, mixedRGB.x);   // Green lighten with red
+    else if (greenLighten == 2) mixedRGB.y = _fmaxf(mixedRGB.y, mixedRGB.z); // Green lighten with blue
+
+    if (blueDarken == 1) mixedRGB.z = _fminf(mixedRGB.z, mixedRGB.x);     // Blue darken with red
+    else if (blueDarken == 2) mixedRGB.z = _fminf(mixedRGB.z, mixedRGB.y); // Blue darken with green
+
+    if (blueLighten == 1) mixedRGB.z = _fmaxf(mixedRGB.z, mixedRGB.x);    // Blue lighten with red
+    else if (blueLighten == 2) mixedRGB.z = _fmaxf(mixedRGB.z, mixedRGB.y); // Blue lighten with green
+
+    // Blend between original and mixed based on tonal mask
+    return _mix(originalRGB, mixedRGB, mixingMask);
+}
+
+// applyChannelIsolation: isolate a single channel for preview
+__DEVICE__ float3 applyChannelIsolation(float3 col, int isolationMode) {
+    if (isolationMode == ISO_RED) {
+        return make_float3(col.x, col.x, col.x);  // Show red as grayscale
+    } else if (isolationMode == ISO_GREEN) {
+        return make_float3(col.y, col.y, col.y);  // Show green as grayscale
+    } else if (isolationMode == ISO_BLUE) {
+        return make_float3(col.z, col.z, col.z);  // Show blue as grayscale
+    }
+    return col; // ISO_NONE - normal view
+}
+
 
 // === MAIN TRANSFORM === (signature as required by Resolve)
 __DEVICE__ float4 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B, float p_A) {
@@ -219,8 +296,11 @@ __DEVICE__ float4 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
     float3 rgb = make_float3(p_R, p_G, p_B);
 
     // --- local copies of UI params (presets only modify these)
-    float fadeCorrection_l    = fadeCorrection;
-    float globalOffset_l      = globalOffset;
+    float fadeCorrection_l          = fadeCorrection;
+    float mixingShadowsStrength_l   = mixingShadowsStrength;
+    float mixingHighlightsStrength_l = mixingHighlightsStrength;
+    int channelIsolation_l          = channelIsolation;
+    float globalOffset_l            = globalOffset;
     float globalShadows_l     = globalShadows;
     float globalMidtones_l    = globalMidtones;
     float globalHighlights_l  = globalHighlights;
@@ -408,32 +488,34 @@ __DEVICE__ float4 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
         if (postChannelLuma > 1e-9f) rgb *= preChannelLuma / postChannelLuma;
     }
 
-    // --- 4. Channel Mixer (RGB matrix transformation)
+    // --- 5. Channel Mixer (RGB matrix transformation)
     float3 mixed_rgb;
     mixed_rgb.x = rgb.x * 1.0f          + rgb.y * redOutGreenIn   + rgb.z * redOutBlueIn;
     mixed_rgb.y = rgb.x * greenOutRedIn + rgb.y * 1.0f            + rgb.z * greenOutBlueIn;
     mixed_rgb.z = rgb.x * blueOutRedIn  + rgb.y * blueOutGreenIn  + rgb.z * 1.0f;
     rgb = mixed_rgb;
 
-    // --- 5. Mixing (Darken / Lighten) — use local combo copies
-    if (redDarkenWith_l == RDW_GREEN) rgb.x = _fminf(rgb.x, rgb.y); else if (redDarkenWith_l == RDW_BLUE) rgb.x = _fminf(rgb.x, rgb.z);
-    if (redLightenWith_l == RLW_GREEN) rgb.x = _fmaxf(rgb.x, rgb.y); else if (redLightenWith_l == RLW_BLUE) rgb.x = _fmaxf(rgb.x, rgb.z);
-    if (greenDarkenWith_l == GDW_RED) rgb.y = _fminf(rgb.y, rgb.x); else if (greenDarkenWith_l == GDW_BLUE) rgb.y = _fminf(rgb.y, rgb.z);
-    if (greenLightenWith_l == GLW_RED) rgb.y = _fmaxf(rgb.y, rgb.x); else if (greenLightenWith_l == GLW_BLUE) rgb.y = _fmaxf(rgb.y, rgb.z);
-    if (blueDarkenWith_l == BDW_RED) rgb.z = _fminf(rgb.z, rgb.x); else if (blueDarkenWith_l == BDW_GREEN) rgb.z = _fminf(rgb.z, rgb.y);
-    if (blueLightenWith_l == BLW_RED) rgb.z = _fmaxf(rgb.z, rgb.x); else if (blueLightenWith_l == BLW_GREEN) rgb.z = _fmaxf(rgb.z, rgb.y);
+    // --- 6. Enhanced Mixing (Darken / Lighten with shadow/highlight targeting)
+    rgb = applyEnhancedMixing(rgb,
+        redDarkenWith_l, redLightenWith_l,
+        greenDarkenWith_l, greenLightenWith_l,
+        blueDarkenWith_l, blueLightenWith_l,
+        mixingShadowsStrength_l, mixingHighlightsStrength_l);
 
-    // --- 6. Copy (use local copy sources)
+    // --- 7. Copy (use local copy sources)
     if (copyRedSource_l == CR_FROM_GREEN) rgb.x = rgb.y; else if (copyRedSource_l == CR_FROM_BLUE) rgb.x = rgb.z;
     if (copyGreenSource_l == CG_FROM_RED) rgb.y = rgb.x; else if (copyGreenSource_l == CG_FROM_BLUE) rgb.y = rgb.z;
     if (copyBlueSource_l == CB_FROM_RED) rgb.z = rgb.x; else if (copyBlueSource_l == CB_FROM_GREEN) rgb.z = rgb.y;
 
-    // --- 7. Removal (use local removal)
+    // --- 8. Removal (use local removal)
     if (channelRemovalMode_l == REM_RED || channelRemovalMode_l == REM_ALL) rgb.x = 0.0f;
     if (channelRemovalMode_l == REM_GREEN || channelRemovalMode_l == REM_ALL) rgb.y = 0.0f;
     if (channelRemovalMode_l == REM_BLUE || channelRemovalMode_l == REM_ALL) rgb.z = 0.0f;
 
-    // --- 8. Output (use local flag)
+    // --- 8. Channel Isolation (for preview)
+    rgb = applyChannelIsolation(rgb, channelIsolation_l);
+
+    // --- 9. Output (use local flag)
     if (outputToCineon_l != 0) {
         rgb.x = linearToCineon(rgb.x);
         rgb.y = linearToCineon(rgb.y);
