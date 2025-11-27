@@ -82,6 +82,7 @@ DEFINE_UI_PARAMS(fadeCorrection, ✨ Fade Correction, DCTLUI_SLIDER_FLOAT, 0.0f,
 // Enhanced mixing controls with shadow/highlight targeting
 DEFINE_UI_PARAMS(mixingShadowsStrength, 🎭 Mixing Shadows, DCTLUI_SLIDER_FLOAT, 1.0f, 0.0f, 1.0f, 0.001f)
 DEFINE_UI_PARAMS(mixingHighlightsStrength, 🎭 Mixing Highlights, DCTLUI_SLIDER_FLOAT, 1.0f, 0.0f, 1.0f, 0.001f)
+DEFINE_UI_PARAMS(donorLuminanceAdjust, 🎭 Donor Luminance, DCTLUI_SLIDER_FLOAT, 1.0f, 0.1f, 3.0f, 0.001f)
 
 // Channel isolation for preview
 DEFINE_UI_PARAMS(channelIsolation, 👁️ Channel Preview, DCTLUI_COMBO_BOX, 0, { ISO_NONE, ISO_RED, ISO_GREEN, ISO_BLUE }, { Normal, Red Only, Green Only, Blue Only })
@@ -138,6 +139,7 @@ DEFINE_UI_TOOLTIP(Preset, "Starting looks for faded film")
 DEFINE_UI_TOOLTIP(✨ Fade Correction, "Restore contrast & color fade")
 DEFINE_UI_TOOLTIP(🎭 Mixing Shadows, "Apply darken/lighten only in shadows")
 DEFINE_UI_TOOLTIP(🎭 Mixing Highlights, "Apply darken/lighten only in highlights")
+DEFINE_UI_TOOLTIP(🎭 Donor Luminance, "Adjust brightness of donor channel before mixing")
 DEFINE_UI_TOOLTIP(👁️ Channel Preview, "Isolate single channel for preview")
 DEFINE_UI_TOOLTIP(🌐 Global Offset, "Raise or lower whole image")
 DEFINE_UI_TOOLTIP(🌑 Global Shadows, "Lift or deepen shadows")
@@ -231,9 +233,10 @@ __DEVICE__ float linearToCineon(float linear) {
 
 // applyEnhancedMixing: apply darken/lighten operations with shadow/highlight targeting
 // Uses luminance masks to selectively apply mixing operations to specific tonal ranges
+// Includes donor channel luminance adjustment for precise repair control
 __DEVICE__ float3 applyEnhancedMixing(float3 col,
     int redDarken, int redLighten, int greenDarken, int greenLighten, int blueDarken, int blueLighten,
-    float shadowStrength, float highlightStrength) {
+    float shadowStrength, float highlightStrength, float donorLuminance) {
 
     // Calculate luminance for tonal range detection
     float luma = col.x * 0.2126f + col.y * 0.7152f + col.z * 0.0722f;
@@ -254,24 +257,27 @@ __DEVICE__ float3 applyEnhancedMixing(float3 col,
     float3 originalRGB = col;
     float3 mixedRGB = col;
 
-    // Apply standard mixing operations
-    if (redDarken == 1) mixedRGB.x = _fminf(mixedRGB.x, mixedRGB.y);      // Red darken with green
-    else if (redDarken == 2) mixedRGB.x = _fminf(mixedRGB.x, mixedRGB.z); // Red darken with blue
+    // Create luminance-adjusted donor channels for mixing
+    float3 adjustedDonors = col * donorLuminance;
 
-    if (redLighten == 1) mixedRGB.x = _fmaxf(mixedRGB.x, mixedRGB.y);     // Red lighten with green
-    else if (redLighten == 2) mixedRGB.x = _fmaxf(mixedRGB.x, mixedRGB.z); // Red lighten with blue
+    // Apply enhanced mixing operations with luminance-adjusted donors
+    if (redDarken == 1) mixedRGB.x = _fminf(mixedRGB.x, adjustedDonors.y);      // Red darken with adjusted green
+    else if (redDarken == 2) mixedRGB.x = _fminf(mixedRGB.x, adjustedDonors.z); // Red darken with adjusted blue
 
-    if (greenDarken == 1) mixedRGB.y = _fminf(mixedRGB.y, mixedRGB.x);    // Green darken with red
-    else if (greenDarken == 2) mixedRGB.y = _fminf(mixedRGB.y, mixedRGB.z); // Green darken with blue
+    if (redLighten == 1) mixedRGB.x = _fmaxf(mixedRGB.x, adjustedDonors.y);     // Red lighten with adjusted green
+    else if (redLighten == 2) mixedRGB.x = _fmaxf(mixedRGB.x, adjustedDonors.z); // Red lighten with adjusted blue
 
-    if (greenLighten == 1) mixedRGB.y = _fmaxf(mixedRGB.y, mixedRGB.x);   // Green lighten with red
-    else if (greenLighten == 2) mixedRGB.y = _fmaxf(mixedRGB.y, mixedRGB.z); // Green lighten with blue
+    if (greenDarken == 1) mixedRGB.y = _fminf(mixedRGB.y, adjustedDonors.x);    // Green darken with adjusted red
+    else if (greenDarken == 2) mixedRGB.y = _fminf(mixedRGB.y, adjustedDonors.z); // Green darken with adjusted blue
 
-    if (blueDarken == 1) mixedRGB.z = _fminf(mixedRGB.z, mixedRGB.x);     // Blue darken with red
-    else if (blueDarken == 2) mixedRGB.z = _fminf(mixedRGB.z, mixedRGB.y); // Blue darken with green
+    if (greenLighten == 1) mixedRGB.y = _fmaxf(mixedRGB.y, adjustedDonors.x);   // Green lighten with adjusted red
+    else if (greenLighten == 2) mixedRGB.y = _fmaxf(mixedRGB.y, adjustedDonors.z); // Green lighten with adjusted blue
 
-    if (blueLighten == 1) mixedRGB.z = _fmaxf(mixedRGB.z, mixedRGB.x);    // Blue lighten with red
-    else if (blueLighten == 2) mixedRGB.z = _fmaxf(mixedRGB.z, mixedRGB.y); // Blue lighten with green
+    if (blueDarken == 1) mixedRGB.z = _fminf(mixedRGB.z, adjustedDonors.x);     // Blue darken with adjusted red
+    else if (blueDarken == 2) mixedRGB.z = _fminf(mixedRGB.z, adjustedDonors.y); // Blue darken with adjusted green
+
+    if (blueLighten == 1) mixedRGB.z = _fmaxf(mixedRGB.z, adjustedDonors.x);    // Blue lighten with adjusted red
+    else if (blueLighten == 2) mixedRGB.z = _fmaxf(mixedRGB.z, adjustedDonors.y); // Blue lighten with adjusted green
 
     // Blend between original and mixed based on tonal mask
     return _mix(originalRGB, mixedRGB, mixingMask);
@@ -299,6 +305,7 @@ __DEVICE__ float4 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
     float fadeCorrection_l          = fadeCorrection;
     float mixingShadowsStrength_l   = mixingShadowsStrength;
     float mixingHighlightsStrength_l = mixingHighlightsStrength;
+    float donorLuminanceAdjust_l    = donorLuminanceAdjust;
     int channelIsolation_l          = channelIsolation;
     float globalOffset_l            = globalOffset;
     float globalShadows_l     = globalShadows;
@@ -500,7 +507,7 @@ __DEVICE__ float4 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
         redDarkenWith_l, redLightenWith_l,
         greenDarkenWith_l, greenLightenWith_l,
         blueDarkenWith_l, blueLightenWith_l,
-        mixingShadowsStrength_l, mixingHighlightsStrength_l);
+        mixingShadowsStrength_l, mixingHighlightsStrength_l, donorLuminanceAdjust_l);
 
     // --- 7. Copy (use local copy sources)
     if (copyRedSource_l == CR_FROM_GREEN) rgb.x = rgb.y; else if (copyRedSource_l == CR_FROM_BLUE) rgb.x = rgb.z;

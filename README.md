@@ -39,6 +39,7 @@ A DaVinci Resolve DCTL for balancing RGB channels and correcting faded film scan
 - **Enhanced Channel Mixing**: Added shadow/highlight targeting for darken/lighten operations
   - **🎭 Mixing Shadows**: Control how much mixing affects shadow areas (0-1)
   - **🎭 Mixing Highlights**: Control how much mixing affects highlight areas (0-1)
+  - **🎭 Donor Luminance**: Adjust brightness of source channel before mixing (0.1-3.0)
   - Perfect for selective film restoration (e.g., repair blue damage only in shadows)
 - **👁️ Channel Preview**: Toggle between Normal, Red Only, Green Only, Blue Only isolation modes
   - Essential for film restoration workflow - inspect individual channels without keybindings

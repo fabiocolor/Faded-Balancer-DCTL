@@ -62,6 +62,14 @@
 >
 > This is perfect for film restoration where damage often occurs in specific tonal ranges.
 
+**What does Donor Luminance do? (v1.6.0)**
+
+> The **🎭 Donor Luminance** slider (0.1-3.0, default 1.0) adjusts the brightness of the source channel before it's used in mixing operations. Values < 1.0 darken the donor, values > 1.0 brighten it.
+>
+> **Example:** When using green to lighten blue, if green is too bright and over-corrects, lower Donor Luminance to 0.7-0.9 to reduce green's contribution. Conversely, if green is too dark, increase to 1.1-1.5.
+>
+> This gives you precise control over how aggressively the donor channel repairs the target channel without affecting the final output of other channels.
+
 **What does Channel Preview do? (v1.6.0)**
 
 > **👁️ Channel Preview** lets you isolate individual channels (Red Only, Green Only, Blue Only) to inspect damage without using keyboard shortcuts. Essential for film restoration workflow to see exactly which channels need repair. Set back to "Normal" for standard color view.
