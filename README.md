@@ -36,11 +36,12 @@ A DaVinci Resolve DCTL for balancing RGB channels and correcting faded film scan
 **Current: v1.6.0**
 
 #### What's New in v1.6.0
-- **Enhanced Channel Mixing**: Added shadow/highlight targeting for darken/lighten operations
+- **Enhanced Channel Mixing**: Added shadow/highlight targeting for all channel mixing operations (matrix and darken/lighten)
   - **🎭 Mixing Shadows**: Control how much mixing affects shadow areas (0-1)
   - **🎭 Mixing Highlights**: Control how much mixing affects highlight areas (0-1)
   - **🎭 Donor Luminance**: Adjust brightness of source channel before mixing (0.1-3.0)
-  - Perfect for selective film restoration (e.g., repair blue damage only in shadows)
+  - All three controls now affect both matrix mixing (e.g. Red from Green) and darken/lighten mixing (e.g. Red darken with Green)
+  - Perfect for selective film restoration (e.g., repair blue damage only in shadows, or boost highlights with controlled donor brightness)
 - **👁️ Channel Preview**: Toggle between Normal, Red Only, Green Only, Blue Only isolation modes
   - Essential for film restoration workflow - inspect individual channels without keybindings
 - **Improved Pipeline**: Streamlined processing with better tonal masking algorithms
@@ -72,12 +73,29 @@ A DaVinci Resolve DCTL for balancing RGB channels and correcting faded film scan
 -   **Film Fade Correction:** A dedicated tool to correct faded footage by adaptively enhancing contrast and saturation.
 -   **Global & Per-Channel Balance:** Adjust Lift, Gamma, and Gain for all channels together or individually.
 -   **Preserve Luminance (⚖):** Optional re-normalization of luma after per-channel adjustments.
--   **Channel Mixer & Highlight Boost:** RGB matrix mixing for highlight recovery (e.g., boost clipped red channel using green/blue data) plus Min/Max composites.
--   **Enhanced Channel Mixing (v1.6.0):** Shadow/highlight targeting for precise tonal control of darken/lighten operations.
+-   **Channel Mixer & Highlight Boost:** RGB matrix mixing for highlight recovery (e.g., boost clipped red channel using green/blue data) plus Min/Max composites. 
+    - **Donor Luminance, Mixing Shadows, and Mixing Highlights** affect both matrix mixing and darken/lighten mixing. This means you can control where and how strongly donor channels contribute to repairs, for all types of mixing.
+    - Use these controls to target only shadows, only highlights, or adjust donor brightness for precise restoration.
+-   **Enhanced Channel Mixing (v1.6.0):** Shadow/highlight targeting for precise tonal control of darken/lighten operations and matrix mixing.
 -   **Channel Preview (v1.6.0):** Individual channel isolation (Red/Green/Blue Only) for inspection without keybindings.
 -   **Channel Replace & Removal:** Replace a channel's data with another or remove a channel entirely.
 -   **Optional Cineon Output:** Linear → Cineon-like log inspection mode.
 -   **Presets (v1.4.0):** Non-destructive internal presets. See `docs/presets_companion.md` for details.
+
+---
+
+### Practical Usage Guidance
+
+- **When to use Donor Luminance:**
+  - If the donor channel is too bright and over-corrects, lower Donor Luminance (e.g. 0.7-0.9).
+  - If the donor is too dark, increase Donor Luminance (e.g. 1.1-1.5).
+  - This works for both matrix mixing and darken/lighten mixing.
+- **When to use Mixing Shadows/Highlights:**
+  - Set Mixing Shadows to 1.0 and Highlights to 0.0 to restrict repairs to shadow regions.
+  - Set Mixing Highlights to 1.0 and Shadows to 0.0 to target only highlights.
+  - Use both at intermediate values for smooth transitions.
+- **All mixing controls (matrix and min/max) are affected by these settings.**
+- **Channel Preview:** Use to inspect individual channels for damage before and after repairs.
 
 ---
 

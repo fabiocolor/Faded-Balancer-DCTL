@@ -45,3 +45,7 @@ previous_versions/
 # Note: ignoring .gitignore only prevents future changes from being tracked;
 # the current file remains in history and visible in the repo.
 .gitignore
+
+# Project-specific ignores
+.cursor/
+.claude/

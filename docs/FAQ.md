@@ -56,25 +56,36 @@
 
 **How do the new shadow/highlight mixing controls work? (v1.6.0)**
 
-> The **🎭 Mixing Shadows** and **🎭 Mixing Highlights** sliders control where darken/lighten operations take effect in the image. Set to `1.0` for full effect in that tonal range, `0.0` for no effect.
+> The **🎭 Mixing Shadows** and **🎭 Mixing Highlights** sliders control where mixing operations take effect in the image. Set to `1.0` for full effect in that tonal range, `0.0` for no effect.
 >
-> **Example:** If blue is damaged only in shadows, set "Blue Darken With Green", then "Mixing Shadows = 1.0" and "Mixing Highlights = 0.0". This repairs blue shadows using green data while leaving highlights untouched.
+> **Important:** These controls now affect both matrix mixing (e.g. Red from Green, Green from Red) and darken/lighten mixing (e.g. Red darken with Green). All channel mixing operations are masked to the selected tonal regions.
+>
+> **Example:** If blue is damaged only in shadows, set "Blue Darken With Green", then "Mixing Shadows = 1.0" and "Mixing Highlights = 0.0". This repairs blue shadows using green data while leaving highlights untouched. The same applies if you use matrix mixing (e.g. "Blue from Green")—the effect will only apply in the selected tonal region.
 >
 > This is perfect for film restoration where damage often occurs in specific tonal ranges.
 
 **What does Donor Luminance do? (v1.6.0)**
 
-> The **🎭 Donor Luminance** slider (0.1-3.0, default 1.0) adjusts the brightness of the source channel before it's used in mixing operations. Values < 1.0 darken the donor, values > 1.0 brighten it.
+> The **🎭 Donor Luminance** slider (0.1-3.0, default 1.0) adjusts the brightness of the source channel before it's used in any mixing operation. Values < 1.0 darken the donor, values > 1.0 brighten it.
 >
-> **Example:** When using green to lighten blue, if green is too bright and over-corrects, lower Donor Luminance to 0.7-0.9 to reduce green's contribution. Conversely, if green is too dark, increase to 1.1-1.5.
+> **Important:** Donor Luminance now affects both matrix mixing and darken/lighten mixing. This gives you precise control over how aggressively the donor channel repairs the target channel for all types of mixing.
 >
-> This gives you precise control over how aggressively the donor channel repairs the target channel without affecting the final output of other channels.
+> **Example:** When using green to lighten blue, if green is too bright and over-corrects, lower Donor Luminance to 0.7-0.9 to reduce green's contribution. Conversely, if green is too dark, increase to 1.1-1.5. This works for both matrix and min/max mixing.
+>
+> Use Donor Luminance to fine-tune the strength of repairs, especially when the donor channel is not a perfect match for the target.
 
 **What does Channel Preview do? (v1.6.0)**
 
 > **👁️ Channel Preview** lets you isolate individual channels (Red Only, Green Only, Blue Only) to inspect damage without using keyboard shortcuts. Essential for film restoration workflow to see exactly which channels need repair. Set back to "Normal" for standard color view.
 
 ---
+
+### Practical Usage Guidance
+
+- Use Mixing Shadows/Highlights to restrict repairs to specific tonal regions (shadows, highlights, or both).
+- Use Donor Luminance to control the strength of the donor channel in all mixing operations.
+- All mixing controls (matrix and min/max) are affected by these settings for consistent results.
+- Use Channel Preview to inspect channels before and after repairs.
 
 <p align="center">
   <a href="../README.md">Back to Home</a>
