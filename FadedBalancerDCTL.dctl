@@ -1,7 +1,7 @@
 // FadedBalancerDCTL v1.6.0
 // DaVinci Resolve DCTL plugin to rebalance RGB for faded film scans.
 //
-// Pipeline (per-pixel): presets → global → fade → per-channel → (optional preserve luminance) → channel mixer → enhanced mixing (darken/lighten + shadow/highlight masks) → replace → removal → channel isolation → (optional linear→Cineon) output
+// Pipeline (per-pixel): presets → global → fade → per-channel → (optional preserve luminance) → channel mixer → enhanced mixing (darken/lighten + shadow/highlight masks + donor luminance) → replace → removal → channel isolation → (optional linear→Cineon) output
 //
 // Notes (concise):
 // - Preserve Luminance: re‑normalize luma after per‑channel adjustments.
@@ -76,24 +76,16 @@ DEFINE_UI_PARAMS(presetMode, Preset, DCTLUI_COMBO_BOX, 0, { PRESET_NONE, PRESET_
 #define ISO_BLUE  3
 
 
-// Global controls
-DEFINE_UI_PARAMS(fadeCorrection, ✨ Fade Correction, DCTLUI_SLIDER_FLOAT, 0.0f, 0.0f, 1.0f, 0.001f)
-
-// Enhanced mixing controls with shadow/highlight targeting
-DEFINE_UI_PARAMS(mixingShadowsStrength, 🎭 Mixing Shadows, DCTLUI_SLIDER_FLOAT, 1.0f, 0.0f, 1.0f, 0.001f)
-DEFINE_UI_PARAMS(mixingHighlightsStrength, 🎭 Mixing Highlights, DCTLUI_SLIDER_FLOAT, 1.0f, 0.0f, 1.0f, 0.001f)
-DEFINE_UI_PARAMS(donorLuminanceAdjust, 🎭 Donor Luminance, DCTLUI_SLIDER_FLOAT, 1.0f, 0.1f, 3.0f, 0.001f)
-
-// Channel isolation for preview
-DEFINE_UI_PARAMS(channelIsolation, 👁️ Channel Preview, DCTLUI_COMBO_BOX, 0, { ISO_NONE, ISO_RED, ISO_GREEN, ISO_BLUE }, { Normal, Red Only, Green Only, Blue Only })
-
+// Stage 1: Global controls
 DEFINE_UI_PARAMS(globalOffset,   🌐 Global Offset,   DCTLUI_SLIDER_FLOAT, 0.0f, -0.5f, 0.5f, 0.001f)
 DEFINE_UI_PARAMS(globalShadows,  🌑 Global Shadows,  DCTLUI_SLIDER_FLOAT, 0.0f, -0.5f, 0.5f, 0.001f)
 DEFINE_UI_PARAMS(globalMidtones, 🌓 Global Midtones, DCTLUI_SLIDER_FLOAT, 1.0f,  0.1f, 3.0f, 0.001f)
 DEFINE_UI_PARAMS(globalHighlights, 🌕 Global Highlights, DCTLUI_SLIDER_FLOAT, 1.0f, 0.1f, 3.0f, 0.001f)
-DEFINE_UI_PARAMS(preserveLuminance, ⚖️ Preserve Luminance, DCTLUI_CHECK_BOX, 0)
- 
-// Per‑channel controls
+
+// Stage 2: Fade Correction
+DEFINE_UI_PARAMS(fadeCorrection, ✨ Fade Correction, DCTLUI_SLIDER_FLOAT, 0.0f, 0.0f, 1.0f, 0.001f)
+
+// Stage 3: Per‑channel controls
 DEFINE_UI_PARAMS(redOffset,     🔴 Red Offset,     DCTLUI_SLIDER_FLOAT, 0.0f, -0.5f, 0.5f, 0.001f)
 DEFINE_UI_PARAMS(redShadows,    🔴 Red Shadows,    DCTLUI_SLIDER_FLOAT, 0.0f, -0.5f, 0.5f, 0.001f)
 DEFINE_UI_PARAMS(redMidtones,   🔴 Red Midtones,   DCTLUI_SLIDER_FLOAT, 1.0f,  0.1f, 3.0f, 0.001f)
@@ -107,7 +99,10 @@ DEFINE_UI_PARAMS(blueShadows,    🔵 Blue Shadows,    DCTLUI_SLIDER_FLOAT, 0.0f
 DEFINE_UI_PARAMS(blueMidtones,   🔵 Blue Midtones,   DCTLUI_SLIDER_FLOAT, 1.0f,  0.1f, 3.0f, 0.001f)
 DEFINE_UI_PARAMS(blueHighlights, 🔵 Blue Highlights, DCTLUI_SLIDER_FLOAT, 1.0f,  0.1f, 3.0f, 0.001f)
 
-// Channel Mixer controls
+// Stage 4: Preserve Luminance (applies after per-channel)
+DEFINE_UI_PARAMS(preserveLuminance, ⚖️ Preserve Luminance, DCTLUI_CHECK_BOX, 0)
+
+// Stage 5: Channel Mixer (RGB matrix transformation)
 DEFINE_UI_PARAMS(redOutGreenIn, 🔴📈 Red from G, DCTLUI_SLIDER_FLOAT, 0.0f, -2.0f, 2.0f, 0.001f)
 DEFINE_UI_PARAMS(redOutBlueIn,  🔴📈 Red from B,  DCTLUI_SLIDER_FLOAT, 0.0f, -2.0f, 2.0f, 0.001f)
 
@@ -117,7 +112,12 @@ DEFINE_UI_PARAMS(greenOutBlueIn,  🟢📈 Green from B,  DCTLUI_SLIDER_FLOAT, 0
 DEFINE_UI_PARAMS(blueOutRedIn,   🔵📈 Blue from R,   DCTLUI_SLIDER_FLOAT, 0.0f, -2.0f, 2.0f, 0.001f)
 DEFINE_UI_PARAMS(blueOutGreenIn, 🔵📈 Blue from G, DCTLUI_SLIDER_FLOAT, 0.0f, -2.0f, 2.0f, 0.001f)
 
-// Channel mixing (darken/lighten composites)
+// Stage 6: Enhanced mixing controls (darken/lighten with shadow/highlight targeting and donor luminance)
+DEFINE_UI_PARAMS(mixingShadowsStrength, 🎭 Mixing Shadows, DCTLUI_SLIDER_FLOAT, 1.0f, 0.0f, 1.0f, 0.001f)
+DEFINE_UI_PARAMS(mixingHighlightsStrength, 🎭 Mixing Highlights, DCTLUI_SLIDER_FLOAT, 1.0f, 0.0f, 1.0f, 0.001f)
+DEFINE_UI_PARAMS(donorLuminanceAdjust, 🎭 Donor Luminance, DCTLUI_SLIDER_FLOAT, 1.0f, 0.1f, 3.0f, 0.001f)
+
+// Darken/Lighten selectors (part of Stage 6)
 DEFINE_UI_PARAMS(redDarkenWith,   🔴🌙 Red Darken,   DCTLUI_COMBO_BOX, 0, { RDW_NONE, RDW_GREEN, RDW_BLUE }, { None, With Green, With Blue })
 DEFINE_UI_PARAMS(redLightenWith,  🔴☀️ Red Lighten,  DCTLUI_COMBO_BOX, 0, { RLW_NONE, RLW_GREEN, RLW_BLUE }, { None, With Green, With Blue })
 DEFINE_UI_PARAMS(greenDarkenWith, 🟢🌙 Green Darken, DCTLUI_COMBO_BOX, 0, { GDW_NONE, GDW_RED, GDW_BLUE }, { None, With Red, With Blue })
@@ -125,11 +125,18 @@ DEFINE_UI_PARAMS(greenLightenWith, 🟢☀️ Green Lighten, DCTLUI_COMBO_BOX, 0
 DEFINE_UI_PARAMS(blueDarkenWith,  🔵🌙 Blue Darken,  DCTLUI_COMBO_BOX, 0, { BDW_NONE, BDW_RED, BDW_GREEN }, { None, With Red, With Green })
 DEFINE_UI_PARAMS(blueLightenWith, 🔵☀️ Blue Lighten, DCTLUI_COMBO_BOX, 0, { BLW_NONE, BLW_RED, BLW_GREEN }, { None, With Red, With Green })
 
-// Replace / removal / output
+// Stage 7: Replace (explicit channel copy)
 DEFINE_UI_PARAMS(copyRedSource,   🔴↔ Replace Red,   DCTLUI_COMBO_BOX, 0, { CR_NONE, CR_FROM_GREEN, CR_FROM_BLUE }, { None, With Green, With Blue })
 DEFINE_UI_PARAMS(copyGreenSource, 🟢↔ Replace Green, DCTLUI_COMBO_BOX, 0, { CG_NONE, CG_FROM_RED, CG_FROM_BLUE }, { None, With Red, With Blue })
 DEFINE_UI_PARAMS(copyBlueSource,  🔵↔ Replace Blue,  DCTLUI_COMBO_BOX, 0, { CB_NONE, CB_FROM_RED, CB_FROM_GREEN }, { None, With Red, With Green })
+
+// Stage 8: Channel Removal
 DEFINE_UI_PARAMS(channelRemovalMode, 🗑️ Channel Removal, DCTLUI_COMBO_BOX, 0, { REM_NONE, REM_RED, REM_GREEN, REM_BLUE, REM_ALL }, { None, Remove Red, Remove Green, Remove Blue, Remove All })
+
+// Stage 9: Channel Preview (isolation for inspection)
+DEFINE_UI_PARAMS(channelIsolation, 👁️ Channel Preview, DCTLUI_COMBO_BOX, 0, { ISO_NONE, ISO_RED, ISO_GREEN, ISO_BLUE }, { Normal, Red Only, Green Only, Blue Only })
+
+// Stage 10: Output to Cineon Log
 DEFINE_UI_PARAMS(outputToCineon, 🎞️ Output to Cineon Log, DCTLUI_CHECK_BOX, 0)
 
 
@@ -502,7 +509,7 @@ __DEVICE__ float4 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
     mixed_rgb.z = rgb.x * blueOutRedIn  + rgb.y * blueOutGreenIn  + rgb.z * 1.0f;
     rgb = mixed_rgb;
 
-    // --- 6. Enhanced Mixing (Darken / Lighten with shadow/highlight targeting)
+    // --- 6. Enhanced Mixing (Darken / Lighten with shadow/highlight targeting and donor luminance adjustment)
     rgb = applyEnhancedMixing(rgb,
         redDarkenWith_l, redLightenWith_l,
         greenDarkenWith_l, greenLightenWith_l,
@@ -519,10 +526,10 @@ __DEVICE__ float4 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
     if (channelRemovalMode_l == REM_GREEN || channelRemovalMode_l == REM_ALL) rgb.y = 0.0f;
     if (channelRemovalMode_l == REM_BLUE || channelRemovalMode_l == REM_ALL) rgb.z = 0.0f;
 
-    // --- 8. Channel Isolation (for preview)
+    // --- 9. Channel Isolation (for preview)
     rgb = applyChannelIsolation(rgb, channelIsolation_l);
 
-    // --- 9. Output (use local flag)
+    // --- 10. Output (use local flag)
     if (outputToCineon_l != 0) {
         rgb.x = linearToCineon(rgb.x);
         rgb.y = linearToCineon(rgb.y);
