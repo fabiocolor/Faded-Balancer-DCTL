@@ -1,0 +1,25 @@
+#!/bin/bash
+# Faded Balancer DCTL - single .pkg install/uninstall toggle
+# $1 = target volume (e.g. /)
+# If DCTL already in Resolve LUT path -> remove (uninstall). Else copy from payload (install).
+
+set -e
+VOLUME="${1:-/}"
+LUT_PATH="$VOLUME/Library/Application Support/Blackmagic Design/DaVinci Resolve/LUT"
+DCTL_NAME="FadedBalancerDCTL.dctl"
+STAGING="$VOLUME/tmp/FadedBalancerDCTL_payload"
+
+if [ -f "$LUT_PATH/$DCTL_NAME" ]; then
+  rm -f "$LUT_PATH/$DCTL_NAME"
+  echo "Faded Balancer DCTL uninstalled."
+else
+  mkdir -p "$LUT_PATH"
+  if [ -f "$STAGING/$DCTL_NAME" ]; then
+    cp "$STAGING/$DCTL_NAME" "$LUT_PATH/$DCTL_NAME"
+    echo "Faded Balancer DCTL installed."
+  else
+    echo "Error: payload not found at $STAGING/$DCTL_NAME" >&2
+    exit 1
+  fi
+fi
+rm -rf "$STAGING"

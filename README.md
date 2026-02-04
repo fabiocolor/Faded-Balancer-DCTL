@@ -155,6 +155,15 @@ Here are a few examples showcasing the plugin's effectiveness in correcting fade
 
 ### Installation
 
+**Using the installers (single package per platform):**
+
+- **Windows:** Download `FadedBalancerDCTL-Setup-x.x.x.exe` from the [Latest Release](https://github.com/fabiocolor/Faded-Balancer-DCTL/releases/latest) assets. Run it to install (accept UAC when prompted). To uninstall: use “Uninstall Faded Balancer DCTL” from Start Menu or Settings → Apps, or run the same `.exe` again and choose Uninstall.
+- **macOS:** Download `FadedBalancerDCTL-x.x.x.pkg` from the [Latest Release](https://github.com/fabiocolor/Faded-Balancer-DCTL/releases/latest) assets. Double-click to install (admin password required). Double-click the same `.pkg` again to uninstall.
+
+The installers are unsigned; your system may show a security warning (e.g. Windows “Run anyway”, macOS right-click → Open or Security & Privacy → “Open Anyway”).
+
+**Or install manually:**
+
 1.  Download `FadedBalancerDCTL.dctl` using the red button above (direct link to the latest release asset), or from the Releases page:
     - Direct: [Latest `.dctl` download](https://github.com/fabiocolor/Faded-Balancer-DCTL/releases/latest/download/FadedBalancerDCTL.dctl)
     - Releases: [Latest Release](https://github.com/fabiocolor/Faded-Balancer-DCTL/releases/latest) (download the `.dctl` from Assets)

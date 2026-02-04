@@ -25,3 +25,46 @@ jobs:
           echo "Tag: $GITHUB_REF_NAME"
           chmod +x tools/create_releases.sh
           ./tools/create_releases.sh
+
+  build-win-installer:
+    needs: create-release
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Inno Setup
+        run: choco install innosetup -y
+
+      - name: Build Windows installer
+        run: |
+          $tag = "$env:GITHUB_REF_NAME"
+          $ver = if ($tag -match '^v(.+)$') { $Matches[1] } else { $tag }
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DMyAppVersion=$ver installers\win\FadedBalancerDCTL.iss
+        shell: pwsh
+
+      - name: Upload Windows installer to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "$GITHUB_REF_NAME" installers\FadedBalancerDCTL-Setup-*.exe --clobber
+        shell: pwsh
+
+  build-mac-installer:
+    needs: create-release
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build macOS installer
+        run: |
+          tag="$GITHUB_REF_NAME"
+          ver="${tag#v}"
+          ./tools/build_mac_installer.sh "$ver"
+
+      - name: Upload macOS installer to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "$GITHUB_REF_NAME" installers/FadedBalancerDCTL-*.pkg --clobber

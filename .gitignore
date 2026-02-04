@@ -46,6 +46,10 @@ previous_versions/
 # the current file remains in history and visible in the repo.
 .gitignore
 
+# Installer build outputs (upload to GitHub Releases instead)
+installers/*.exe
+installers/*.pkg
+
 # Project-specific ignores
 .cursor/
 .claude/
