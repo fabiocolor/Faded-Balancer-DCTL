@@ -40,84 +40,97 @@ Source: "..\..\FadedBalancerDCTL.dctl"; DestDir: "{commonappdata}\{#ResolveLUTPa
 Name: "{group}\Uninstall {#MyAppName}"; Filename: "{uninstallexe}"
 
 [Code]
+function RunUninstall(const UninstallStr: string): Boolean;
+var
+  ExePath: string;
+  Params: string;
+  PosSpace: integer;
+  ResultCode: integer;
+  Cmd: string;
+begin
+  Result := False;
+  Cmd := Trim(UninstallStr);
+  ExePath := '';
+  Params := '';
+
+  if (Length(Cmd) >= 2) and (Cmd[1] = '"') then
+  begin
+    PosSpace := 2;
+    while (PosSpace <= Length(Cmd)) and (Cmd[PosSpace] <> '"') do
+      PosSpace := PosSpace + 1;
+    if PosSpace <= Length(Cmd) then
+    begin
+      ExePath := Copy(Cmd, 2, PosSpace - 2);
+      Params := Trim(Copy(Cmd, PosSpace + 1, MaxInt));
+    end;
+  end;
+
+  if ExePath = '' then
+  begin
+    PosSpace := Pos(' ', Cmd);
+    if PosSpace > 0 then
+    begin
+      ExePath := Copy(Cmd, 1, PosSpace - 1);
+      Params := Trim(Copy(Cmd, PosSpace + 1, MaxInt));
+    end
+    else
+      ExePath := Cmd;
+  end;
+
+  if (ExePath <> '') and FileExists(ExePath) then
+  begin
+    if Exec(ExePath, Params, '', SW_SHOW, ewWaitUntilTerminated, ResultCode) then
+      Result := True;
+  end;
+end;
+
 function InitializeSetup(): Boolean;
 var
   UninstallKey: string;
   UninstallStr: string;
   DctlPath: string;
-  PosSpace: integer;
-  ExePath: string;
-  Params: string;
-  ResultCode: integer;
+  HasInstaller: Boolean;
+  HasFile: Boolean;
+  Choice: Integer;
 begin
   Result := True;
   UninstallKey := 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\' + '{#MyAppId}_is1';
   DctlPath := ExpandConstant('{commonappdata}') + '\Blackmagic Design\DaVinci Resolve\Support\LUT\FadedBalancerDCTL.dctl';
 
-  { Already installed by this installer: offer to run uninstall }
-  if RegQueryStringValue(HKLM, UninstallKey, 'UninstallString', UninstallStr) and (UninstallStr <> '') then
+  HasInstaller := RegQueryStringValue(HKLM, UninstallKey, 'UninstallString', UninstallStr) and (UninstallStr <> '');
+  HasFile := FileExists(DctlPath);
+
+  if HasInstaller or HasFile then
   begin
-    if MsgBox('Faded Balancer DCTL is already installed.' #13#10 'Do you want to uninstall it?', mbConfirmation, MB_YESNO) = IDYES then
+    Choice := MsgBox('A previous version of Faded Balancer DCTL is already installed.' #13#10 #13#10
+      'Choose an option:' #13#10
+      '- Yes: Replace and install' #13#10
+      '- No: Uninstall only' #13#10
+      '- Cancel: Exit setup', mbConfirmation, MB_YESNOCANCEL);
+
+    if Choice = IDYES then
     begin
-      { UninstallString is e.g. "C:\path\to\unins000.exe" /u "C:\path" - parse quoted exe path then rest as params }
-      UninstallStr := Trim(UninstallStr);
-      ExePath := '';
-      Params := '';
-      if (Length(UninstallStr) >= 2) and (UninstallStr[1] = '"') then
-      begin
-        PosSpace := 2;
-        while (PosSpace <= Length(UninstallStr)) and (UninstallStr[PosSpace] <> '"') do
-          PosSpace := PosSpace + 1;
-        if PosSpace <= Length(UninstallStr) then
-        begin
-          ExePath := Copy(UninstallStr, 2, PosSpace - 2);
-          Params := Trim(Copy(UninstallStr, PosSpace + 1, MaxInt));
-        end;
-      end;
-      if ExePath = '' then
-      begin
-        PosSpace := Pos(' ', UninstallStr);
-        if PosSpace > 0 then
-        begin
-          ExePath := Copy(UninstallStr, 1, PosSpace - 1);
-          Params := Trim(Copy(UninstallStr, PosSpace + 1, MaxInt));
-        end
-        else
-          ExePath := UninstallStr;
-      end;
-      if (ExePath <> '') and FileExists(ExePath) then
-      begin
-        { Wait for uninstall to finish so registry is removed; then next run will offer install }
-        if Exec(ExePath, Params, '', SW_SHOW, ewWaitUntilTerminated, ResultCode) then
-          MsgBox('Uninstall completed. You can now run this setup again to install.', mbInformation, MB_OK)
-        else
-          MsgBox('Uninstall may have failed. If the message appears again, use Settings > Apps to uninstall.', mbError, MB_OK);
-      end
-      else
-      begin
-        { Uninstaller missing (e.g. deleted); remove registry key and DCTL so next run can install }
+      { Replace: remove file if present and continue }
+      if HasFile then
         if DeleteFile(DctlPath) then;
-        RegDeleteKeyIncludingSubkeys(HKLM, UninstallKey);
-        MsgBox('Removed leftover entries. Run this setup again to install.', mbInformation, MB_OK);
+      Result := True;
+    end
+    else if Choice = IDNO then
+    begin
+      { Uninstall only: use uninstaller if available, else delete file }
+      if HasInstaller then
+      begin
+        if not RunUninstall(UninstallStr) then
+          MsgBox('Uninstall may have failed. You can also remove it from Settings > Apps.', mbError, MB_OK);
+      end
+      else if HasFile then
+      begin
+        if not DeleteFile(DctlPath) then
+          MsgBox('Could not remove the file. You may need to run as administrator.', mbError, MB_OK);
       end;
       Result := False;
-    end;
-    Exit;
-  end;
-
-  { DCTL present but not from our installer (e.g. manual copy): offer to remove }
-  if FileExists(DctlPath) then
-  begin
-    if MsgBox('Faded Balancer DCTL is already present in the Resolve LUT folder.' #13#10 'Do you want to remove it?', mbConfirmation, MB_YESNO) = IDYES then
-    begin
-      if DeleteFile(DctlPath) then
-        MsgBox('Faded Balancer DCTL was removed.', mbInformation, MB_OK)
-      else
-        MsgBox('Could not remove the file. You may need to run as administrator.', mbError, MB_OK);
+    end
+    else
       Result := False;
-    end;
-    Exit;
   end;
-
-  { Not installed: proceed with install }
 end;
