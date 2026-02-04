@@ -1,0 +1,59 @@
+#!/bin/bash
+# Faded Balancer DCTL - prompt to remove existing version before install
+# $1 = target volume (e.g. /)
+
+set -euo pipefail
+
+# Ensure we have a valid volume path
+# macOS Installer sometimes passes the package path instead of volume, so detect and fix
+if [ -z "${1:-}" ]; then
+  VOLUME="/"
+elif [[ "$1" == *".pkg"* ]] || [[ "$1" != "/"* ]]; then
+  # If $1 contains .pkg or doesn't start with /, it's not a valid volume path
+  VOLUME="/"
+else
+  VOLUME="$1"
+fi
+
+# Normalize volume path (remove trailing slash if present, except for root)
+if [ "$VOLUME" != "/" ] && [ "${VOLUME: -1}" = "/" ]; then
+  VOLUME="${VOLUME%/}"
+fi
+
+LUT_PATH="${VOLUME}/Library/Application Support/Blackmagic Design/DaVinci Resolve/LUT"
+DCTL_NAME="FadedBalancerDCTL.dctl"
+INSTALLED_FILE="${LUT_PATH}/${DCTL_NAME}"
+PKG_IDENTIFIER="com.fabiocolor.FadedBalancerDCTL"
+ACTION_FILE="${VOLUME}/tmp/FadedBalancerDCTL_action"
+
+# Check if already installed
+if [ -f "${INSTALLED_FILE}" ] || [ -e "${INSTALLED_FILE}" ] || test -r "${INSTALLED_FILE}" 2>/dev/null; then
+  ACTION="replace"
+
+  if command -v /usr/bin/osascript >/dev/null 2>&1; then
+    BUTTON=$(/usr/bin/osascript <<'APPLESCRIPT'
+display dialog "A previous version of Faded Balancer DCTL is already installed.\n\nChoose what to do:" buttons {"Cancel", "Uninstall Only", "Replace & Install"} default button "Replace & Install" with title "Faded Balancer DCTL"
+button returned of result
+APPLESCRIPT
+) || {
+      echo "Installation canceled by user." >&2
+      exit 1
+    }
+
+    if [ "$BUTTON" = "Uninstall Only" ]; then
+      ACTION="uninstall"
+    elif [ "$BUTTON" = "Replace & Install" ]; then
+      ACTION="replace"
+    else
+      echo "Installation canceled by user." >&2
+      exit 1
+    fi
+  else
+    echo "Warning: Unable to prompt for confirmation. Proceeding to replace existing installation." >&2
+  fi
+
+  rm -f "${INSTALLED_FILE}" || true
+  pkgutil --forget "${PKG_IDENTIFIER}" >/dev/null 2>&1 || true
+
+  echo "$ACTION" > "$ACTION_FILE"
+fi

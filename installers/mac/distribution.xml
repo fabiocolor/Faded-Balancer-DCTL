@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<installer-gui-script minSpecVersion="1">
+    <title>Faded Balancer DCTL</title>
+    <organization>com.fabiocolor</organization>
+    <domains enable_anywhere="false" enable_currentUserHome="false" enable_localSystem="true"/>
+    <options customize="never" require-scripts="true" hostArchitectures="x86_64,arm64"/>
+    <welcome file="welcome.html" mime-type="text/html"/>
+    <conclusion file="conclusion.html" mime-type="text/html"/>
+    <pkg-ref id="com.fabiocolor.FadedBalancerDCTL"/>
+    <choices-outline>
+        <line choice="com.fabiocolor.FadedBalancerDCTL"/>
+    </choices-outline>
+    <choice id="com.fabiocolor.FadedBalancerDCTL" visible="true">
+        <pkg-ref id="com.fabiocolor.FadedBalancerDCTL"/>
+    </choice>
+    <pkg-ref id="com.fabiocolor.FadedBalancerDCTL" version="1.6.0" onConclusion="none">FadedBalancerDCTL-component.pkg</pkg-ref>
+</installer-gui-script>

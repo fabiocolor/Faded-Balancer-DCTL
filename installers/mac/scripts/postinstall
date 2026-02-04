@@ -3,23 +3,98 @@
 # $1 = target volume (e.g. /)
 # If DCTL already in Resolve LUT path -> remove (uninstall). Else copy from payload (install).
 
-set -e
-VOLUME="${1:-/}"
-LUT_PATH="$VOLUME/Library/Application Support/Blackmagic Design/DaVinci Resolve/LUT"
-DCTL_NAME="FadedBalancerDCTL.dctl"
-STAGING="$VOLUME/tmp/FadedBalancerDCTL_payload"
+set -euo pipefail
 
-if [ -f "$LUT_PATH/$DCTL_NAME" ]; then
-  rm -f "$LUT_PATH/$DCTL_NAME"
-  echo "Faded Balancer DCTL uninstalled."
+# Ensure we have a valid volume path
+# macOS Installer sometimes passes the package path instead of volume, so detect and fix
+if [ -z "${1:-}" ]; then
+  VOLUME="/"
+elif [[ "$1" == *".pkg"* ]] || [[ "$1" != "/"* ]]; then
+  # If $1 contains .pkg or doesn't start with /, it's not a valid volume path
+  VOLUME="/"
 else
-  mkdir -p "$LUT_PATH"
-  if [ -f "$STAGING/$DCTL_NAME" ]; then
-    cp "$STAGING/$DCTL_NAME" "$LUT_PATH/$DCTL_NAME"
-    echo "Faded Balancer DCTL installed."
+  VOLUME="$1"
+fi
+
+# Normalize volume path (remove trailing slash if present, except for root)
+if [ "$VOLUME" != "/" ] && [ "${VOLUME: -1}" = "/" ]; then
+  VOLUME="${VOLUME%/}"
+fi
+
+LUT_PATH="${VOLUME}/Library/Application Support/Blackmagic Design/DaVinci Resolve/LUT"
+DCTL_NAME="FadedBalancerDCTL.dctl"
+STAGING="${VOLUME}/tmp/FadedBalancerDCTL_payload"
+INSTALLED_FILE="${LUT_PATH}/${DCTL_NAME}"
+PKG_IDENTIFIER="com.fabiocolor.FadedBalancerDCTL"
+ACTION_FILE="${VOLUME}/tmp/FadedBalancerDCTL_action"
+
+ACTION=""
+if [ -f "${ACTION_FILE}" ]; then
+  ACTION="$(cat "${ACTION_FILE}" 2>/dev/null || true)"
+  rm -f "${ACTION_FILE}" || true
+fi
+
+# Check if already installed (uninstall mode)
+# Check if the DCTL file exists in the LUT directory
+IS_INSTALLED=false
+
+# Try multiple methods to detect the file (installer sandbox can be tricky)
+if [ -f "${INSTALLED_FILE}" ]; then
+  IS_INSTALLED=true
+elif [ -e "${INSTALLED_FILE}" ]; then
+  IS_INSTALLED=true
+elif test -r "${INSTALLED_FILE}" 2>/dev/null; then
+  IS_INSTALLED=true
+elif ls "${INSTALLED_FILE}" >/dev/null 2>&1; then
+  IS_INSTALLED=true
+fi
+
+# If preinstall requested replace, force install even if file still exists
+if [ "$ACTION" = "replace" ]; then
+  rm -f "${INSTALLED_FILE}" || true
+  IS_INSTALLED=false
+fi
+
+if [ "$ACTION" = "uninstall" ]; then
+  # Uninstall only (requested by preinstall)
+  rm -f "${INSTALLED_FILE}" || true
+  echo "Faded Balancer DCTL uninstalled."
+  pkgutil --forget "${PKG_IDENTIFIER}" >/dev/null 2>&1 || true
+elif [ "$IS_INSTALLED" = "true" ]; then
+  # File exists, uninstall it
+  if rm -f "${INSTALLED_FILE}" 2>/dev/null; then
+    echo "Faded Balancer DCTL uninstalled."
+    # Remove package receipt so next run will install again
+    pkgutil --forget "${PKG_IDENTIFIER}" >/dev/null 2>&1 || true
   else
-    echo "Error: payload not found at $STAGING/$DCTL_NAME" >&2
+    # Force removal (postinstall runs as root, so this should work)
+    rm -f "${INSTALLED_FILE}" || true
+    echo "Faded Balancer DCTL uninstalled."
+    # Remove package receipt so next run will install again
+    pkgutil --forget "${PKG_IDENTIFIER}" >/dev/null 2>&1 || true
+  fi
+else
+  # Install mode: ensure LUT directory exists
+  if ! mkdir -p "${LUT_PATH}" 2>/dev/null; then
+    echo "Error: Failed to create LUT directory: ${LUT_PATH}" >&2
+    exit 1
+  fi
+  
+  # Copy from staging location
+  if [ -f "${STAGING}/${DCTL_NAME}" ]; then
+    if cp "${STAGING}/${DCTL_NAME}" "${LUT_PATH}/${DCTL_NAME}"; then
+      echo "Faded Balancer DCTL installed."
+      # Forget receipt so the same .pkg can be run again (toggle uninstall)
+      pkgutil --forget "${PKG_IDENTIFIER}" >/dev/null 2>&1 || true
+    else
+      echo "Error: Failed to copy DCTL file" >&2
+      exit 1
+    fi
+  else
+    echo "Error: payload not found at ${STAGING}/${DCTL_NAME}" >&2
     exit 1
   fi
 fi
-rm -rf "$STAGING"
+
+# Clean up staging directory
+rm -rf "${STAGING}"
