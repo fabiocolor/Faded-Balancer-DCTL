@@ -11,12 +11,14 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/fabiocolor/Faded-Balancer-DCTL/releases/latest/download/FadedBalancerDCTL.dctl">
-    <img src="https://img.shields.io/badge/Download%20Latest%20Release-Here-red?style=for-the-badge" alt="Download Latest Release">
+  <a href="https://github.com/fabiocolor/Faded-Balancer-DCTL/releases/latest">
+    <img src="https://img.shields.io/badge/Download-Easy%20Installer-red?style=for-the-badge" alt="Download Easy Installer">
   </a>
   <br/>
   <small>
-    Or visit <a href="https://github.com/fabiocolor/Faded-Balancer-DCTL/releases/latest">Latest Release</a> and download <code>FadedBalancerDCTL.dctl</code> from Assets.
+    Preferred: download the platform installer (<code>.pkg</code> or <code>.exe</code>) from
+    <a href="https://github.com/fabiocolor/Faded-Balancer-DCTL/releases/latest">Latest Release</a>.
+    Manual <code>.dctl</code> install is also available from Assets.
   </small>
 </p>
 
@@ -155,16 +157,16 @@ Here are a few examples showcasing the plugin's effectiveness in correcting fade
 
 ### Installation
 
-**Using the installers (single package per platform):**
+**Recommended: Easy installers (single package per platform):**
 
 - **Windows:** Download `FadedBalancerDCTL-Setup-x.x.x.exe` from the [Latest Release](https://github.com/fabiocolor/Faded-Balancer-DCTL/releases/latest) assets. Run it to install (accept UAC when prompted). To uninstall: use “Uninstall Faded Balancer DCTL” from Start Menu or Settings → Apps, or run the same `.exe` again and choose Uninstall.
 - **macOS:** Download `FadedBalancerDCTL-x.x.x.pkg` from the [Latest Release](https://github.com/fabiocolor/Faded-Balancer-DCTL/releases/latest) assets. Double-click to install (admin password required). Double-click the same `.pkg` again to uninstall.
 
 The installers are unsigned; your system may show a security warning (e.g. Windows “Run anyway”, macOS right-click → Open or Security & Privacy → “Open Anyway”).
 
-**Or install manually:**
+**Alternative: Manual install (.dctl file):**
 
-1.  Download `FadedBalancerDCTL.dctl` using the red button above (direct link to the latest release asset), or from the Releases page:
+1.  Download `FadedBalancerDCTL.dctl` from the Releases page:
     - Direct: [Latest `.dctl` download](https://github.com/fabiocolor/Faded-Balancer-DCTL/releases/latest/download/FadedBalancerDCTL.dctl)
     - Releases: [Latest Release](https://github.com/fabiocolor/Faded-Balancer-DCTL/releases/latest) (download the `.dctl` from Assets)
 2.  Place it in your DaVinci Resolve LUT folder:
