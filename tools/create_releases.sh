@@ -203,21 +203,7 @@ for tag in $tags; do
       echo "[asset] ${desired_asset_name} not found at tag; skipped"
     fi
 
-    # Cleanup: remove any other assets except the desired DCTL asset
-    # Use names and IDs from a single listing to avoid extra GETs
-    nwo=$(gh repo view --json nameWithOwner -q .nameWithOwner)
-    while IFS=$'\t' read -r asset_name asset_id; do
-      [ -z "$asset_id" ] && continue
-      if [ "$asset_name" != "$desired_asset_name" ]; then
-        echo "[asset] deleting stray asset: $asset_name"
-        if gh api -X DELETE -H "Accept: application/vnd.github+json" \
-            repos/$nwo/releases/assets/$asset_id >/dev/null 2>&1; then
-          echo "[asset] deleted: $asset_name"
-        else
-          echo "[asset] could not delete (possibly already removed): $asset_name"
-        fi
-      fi
-    done < <(gh release view "$tag" --json assets -q '.assets[] | [.name, .id] | @tsv' 2>/dev/null)
+    # Keep any existing assets (installers, docs, etc.) and only ensure the DCTL is present.
   fi
 
   rm -f "$tmpfile"

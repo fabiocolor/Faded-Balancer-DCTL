@@ -26,6 +26,12 @@ jobs:
           chmod +x tools/create_releases.sh
           ./tools/create_releases.sh
 
+      - name: Upload install guide to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "$GITHUB_REF_NAME" docs/INSTALL.md --clobber
+
   build-win-installer:
     needs: create-release
     runs-on: windows-latest
@@ -41,14 +47,36 @@ jobs:
           $tag = "$env:GITHUB_REF_NAME"
           $ver = if ($tag -match '^v(.+)$') { $Matches[1] } else { $tag }
           & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DMyAppVersion=$ver installers\win\FadedBalancerDCTL.iss
+
+          $exe = Get-ChildItem installers\FadedBalancerDCTL-Setup-*.exe | Select-Object -First 1
+          $zip = "installers\FadedBalancerDCTL-Setup-$ver-win64.zip"
+          Compress-Archive -Path $exe.FullName -DestinationPath $zip -Force
         shell: pwsh
 
-      - name: Upload Windows installer to release
+      - name: Upload Windows installer zip to release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload "$GITHUB_REF_NAME" installers\FadedBalancerDCTL-Setup-*.exe --clobber
+          gh release upload "$GITHUB_REF_NAME" installers\FadedBalancerDCTL-Setup-*-win64.zip --clobber
         shell: pwsh
+
+      - name: Build internal Windows security metadata
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path internal-security/windows | Out-Null
+          Copy-Item -Force installers\FadedBalancerDCTL-Setup-*-win64.zip internal-security/windows/
+          $files = Get-ChildItem internal-security/windows -File
+          $lines = foreach ($file in $files) {
+            $hash = (Get-FileHash -Path $file.FullName -Algorithm SHA256).Hash.ToLower()
+            "$hash *$($file.Name)"
+          }
+          Set-Content -Path internal-security/windows/SHA256SUMS.txt -Value $lines
+
+      - name: Upload internal Windows security artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: internal-security-windows
+          path: internal-security/windows/*
 
   build-mac-installer:
     needs: create-release
@@ -62,9 +90,25 @@ jobs:
           tag="$GITHUB_REF_NAME"
           ver="${tag#v}"
           ./tools/build_mac_installer.sh "$ver"
+          ditto -c -k --sequesterRsrc --keepParent "installers/FadedBalancerDCTL-$ver.pkg" "installers/FadedBalancerDCTL-$ver-macos.zip"
 
-      - name: Upload macOS installer to release
+      - name: Upload macOS installer zip to release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload "$GITHUB_REF_NAME" installers/FadedBalancerDCTL-*.pkg --clobber
+          gh release upload "$GITHUB_REF_NAME" installers/FadedBalancerDCTL-*-macos.zip --clobber
+
+      - name: Build internal macOS security metadata
+        run: |
+          mkdir -p internal-security/macos
+          cp installers/FadedBalancerDCTL-*-macos.zip internal-security/macos/
+          (
+            cd internal-security/macos
+            shasum -a 256 * > SHA256SUMS.txt
+          )
+
+      - name: Upload internal macOS security artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: internal-security-macos
+          path: internal-security/macos/*
