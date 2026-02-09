@@ -175,6 +175,8 @@ Here are a few examples showcasing the plugin's effectiveness in correcting fade
 
 Simple install guide: [docs/INSTALL.md](docs/INSTALL.md)
 
+Maintainer release notes: [docs/MAINTAINERS_RELEASE.md](docs/MAINTAINERS_RELEASE.md)
+
 ---
 
 ### Sample Footage
