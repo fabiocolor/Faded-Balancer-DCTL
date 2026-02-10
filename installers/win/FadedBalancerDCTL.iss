@@ -110,10 +110,7 @@ begin
   begin
     if WizardSilent then
     begin
-      if HasInstaller then
-        if not RunUninstall(UninstallStr + ' /VERYSILENT /SUPPRESSMSGBOXES /NOCANCEL /NORESTART', True) then;
-      if HasFile then
-        if DeleteFile(DctlPath) then;
+      { Keep unattended installs non-interactive and deterministic. }
       Result := True;
       Exit;
     end;
