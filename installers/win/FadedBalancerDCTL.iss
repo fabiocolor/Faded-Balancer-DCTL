@@ -40,13 +40,14 @@ Source: "..\..\FadedBalancerDCTL.dctl"; DestDir: "{commonappdata}\{#ResolveLUTPa
 Name: "{group}\Uninstall {#MyAppName}"; Filename: "{uninstallexe}"
 
 [Code]
-function RunUninstall(const UninstallStr: string): Boolean;
+function RunUninstall(const UninstallStr: string; const SilentMode: Boolean): Boolean;
 var
   ExePath: string;
   Params: string;
   PosSpace: integer;
   ResultCode: integer;
   Cmd: string;
+  ShowCmd: Integer;
 begin
   Result := False;
   Cmd := Trim(UninstallStr);
@@ -79,7 +80,12 @@ begin
 
   if (ExePath <> '') and FileExists(ExePath) then
   begin
-    if Exec(ExePath, Params, '', SW_SHOW, ewWaitUntilTerminated, ResultCode) then
+    if SilentMode then
+      ShowCmd := SW_HIDE
+    else
+      ShowCmd := SW_SHOW;
+
+    if Exec(ExePath, Params, '', ShowCmd, ewWaitUntilTerminated, ResultCode) then
       Result := True;
   end;
 end;
@@ -102,6 +108,16 @@ begin
 
   if HasInstaller or HasFile then
   begin
+    if WizardSilent then
+    begin
+      if HasInstaller then
+        if not RunUninstall(UninstallStr + ' /VERYSILENT /SUPPRESSMSGBOXES /NOCANCEL /NORESTART', True) then;
+      if HasFile then
+        if DeleteFile(DctlPath) then;
+      Result := True;
+      Exit;
+    end;
+
     Choice := MsgBox('A previous version of Faded Balancer DCTL is already installed.' #13#10 #13#10
       'Choose an option:' #13#10
       '- Yes: Replace and install' #13#10
@@ -120,7 +136,7 @@ begin
       { Uninstall only: use uninstaller if available, else delete file }
       if HasInstaller then
       begin
-        if not RunUninstall(UninstallStr) then
+        if not RunUninstall(UninstallStr, False) then
           MsgBox('Uninstall may have failed. You can also remove it from Settings > Apps.', mbError, MB_OK);
       end
       else if HasFile then

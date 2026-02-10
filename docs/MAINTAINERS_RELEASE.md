@@ -15,3 +15,8 @@ Maintainer/build/release references:
 Policy:
 - Public release assets: ZIP installers + `FadedBalancerDCTL.dctl` + `INSTALL.md`
 - Internal security/check files: workflow artifacts (maintainer-only)
+
+Winget/automation note (Windows installer):
+- Use explicit Inno silent switches in manifests:
+- `Silent: /VERYSILENT /SUPPRESSMSGBOXES /NOCANCEL /NORESTART /SP-`
+- `SilentWithProgress: /SILENT /SUPPRESSMSGBOXES /NOCANCEL /NORESTART /SP-`
