@@ -57,7 +57,13 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload "$GITHUB_REF_NAME" installers\FadedBalancerDCTL-Setup-*-win64.zip --clobber
+          $asset = (Get-ChildItem installers\FadedBalancerDCTL-Setup-*-win64.zip | Select-Object -First 1).FullName
+          if (-not $asset) { throw "Windows installer zip not found." }
+          for ($i=1; $i -le 5; $i++) {
+            gh release upload "$env:GITHUB_REF_NAME" "$asset" --clobber -R "$env:GITHUB_REPOSITORY" && break
+            if ($i -eq 5) { throw "Failed to upload Windows installer zip after retries." }
+            Start-Sleep -Seconds 5
+          }
         shell: pwsh
 
       - name: Build internal Windows security metadata
