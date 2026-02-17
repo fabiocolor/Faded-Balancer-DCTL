@@ -15,10 +15,11 @@
     <img src="https://img.shields.io/badge/Download-Easy%20Installer-red?style=for-the-badge" alt="Download Easy Installer">
   </a>
   <br/>
+  <code>winget install FabioColor.FadedBalancerDCTL</code>
+  <br/>
   <small>
-    Preferred: download the platform installer ZIP (<code>*-win64.zip</code> or <code>*-macos.zip</code>) from
+    Preferred on Windows: install via <code>winget</code>. For macOS (or fallback), use the installer ZIPs from
     <a href="https://github.com/fabiocolor/Faded-Balancer-DCTL/releases/latest">Latest Release</a>.
-    Manual <code>.dctl</code> install is also available from Assets.
   </small>
 </p>
 
@@ -157,21 +158,18 @@ Here are a few examples showcasing the plugin's effectiveness in correcting fade
 
 ### Installation
 
-**Recommended: Easy installer ZIPs (single download per platform):**
-
-- **Windows:** Download `FadedBalancerDCTL-Setup-x.x.x-win64.zip` from [Latest Release](https://github.com/fabiocolor/Faded-Balancer-DCTL/releases/latest), extract it, then run the contained `.exe`.
-- **macOS:** Download `FadedBalancerDCTL-x.x.x-macos.zip` from [Latest Release](https://github.com/fabiocolor/Faded-Balancer-DCTL/releases/latest), extract it, then run the contained `.pkg`.
-
-**Alternative: Manual install (.dctl file):**
-
-1.  Download `FadedBalancerDCTL.dctl` from the Releases page:
-    - Direct: [Latest `.dctl` download](https://github.com/fabiocolor/Faded-Balancer-DCTL/releases/latest/download/FadedBalancerDCTL.dctl)
-    - Releases: [Latest Release](https://github.com/fabiocolor/Faded-Balancer-DCTL/releases/latest) (download the `.dctl` from Assets)
-2.  Place it in your DaVinci Resolve LUT folder:
-	-   **Windows:** `C:\ProgramData\Blackmagic Design\DaVinci Resolve\Support\LUT\`
-	-   **macOS:** `/Library/Application Support/Blackmagic Design/DaVinci Resolve/LUT/`
-3.  Restart DaVinci Resolve.
-4.  In the Color page, add a "DCTL" effect to a node and select `FadedBalancerDCTL` from the dropdown menu.
+1. **Windows (preferred):** install with winget:
+   - `winget install FabioColor.FadedBalancerDCTL`
+2. **Installer ZIP fallback (Windows/macOS):**
+   - **Windows:** Download `FadedBalancerDCTL-Setup-x.x.x-win64.zip` from [Latest Release](https://github.com/fabiocolor/Faded-Balancer-DCTL/releases/latest), extract it, then run the contained `.exe`.
+   - **macOS:** Download `FadedBalancerDCTL-x.x.x-macos.zip` from [Latest Release](https://github.com/fabiocolor/Faded-Balancer-DCTL/releases/latest), extract it, then run the contained `.pkg`.
+3. **Manual `.dctl` fallback:**
+   - Download `FadedBalancerDCTL.dctl` from [Latest `.dctl` download](https://github.com/fabiocolor/Faded-Balancer-DCTL/releases/latest/download/FadedBalancerDCTL.dctl).
+   - Place it in your DaVinci Resolve LUT folder:
+     - **Windows:** `C:\ProgramData\Blackmagic Design\DaVinci Resolve\Support\LUT\`
+     - **macOS:** `/Library/Application Support/Blackmagic Design/DaVinci Resolve/LUT/`
+4. Restart DaVinci Resolve.
+5. In the Color page, add a `DCTL` effect and select `FadedBalancerDCTL`.
 
 Simple install guide: [docs/INSTALL.md](docs/INSTALL.md)
 
