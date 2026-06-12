@@ -303,8 +303,8 @@ __DEVICE__ float3 applyChannelIsolation(float3 col, int isolationMode) {
 }
 
 
-// === MAIN TRANSFORM === (signature as required by Resolve)
-__DEVICE__ float4 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B, float p_A) {
+// === MAIN TRANSFORM === (RGB-only signature for Resolve Transform DCTL)
+__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B) {
     // Preserve incoming pixel
     float3 rgb = make_float3(p_R, p_G, p_B);
 
@@ -535,5 +535,5 @@ __DEVICE__ float4 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
         rgb.y = linearToCineon(rgb.y);
         rgb.z = linearToCineon(rgb.z);
     }
-    return make_float4(rgb.x, rgb.y, rgb.z, p_A);
+    return rgb;
 }
