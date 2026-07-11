@@ -25,7 +25,6 @@
 
 <p align="center">
   <a href="docs/CHANNEL_RECOVERY.md">Channel Recovery</a> •
-  <a href="docs/FEATURE_AUDIT_v1.7.0.md">v1.7 Feature Audit</a> •
   <a href="docs/BACKGROUND_FILM_FADING.md">Background & Science</a> •
   <a href="docs/presets_companion.md">Presets Companion</a> •
   <a href="docs/FAQ.md">FAQ</a> •
@@ -199,7 +198,7 @@ These examples show possible manual or preset balances. They are examples, not a
 4. Restart Resolve or refresh the DCTL list.
 5. On the Color page, add a DCTL effect and select `FadedBalancerDCTL`.
 
-See the [simple install guide](docs/INSTALL.md) or [maintainer release guide](docs/MAINTAINERS_RELEASE.md).
+See the [installation guide](docs/INSTALL.md).
 
 ---
 

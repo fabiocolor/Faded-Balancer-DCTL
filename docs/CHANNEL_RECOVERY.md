@@ -2,7 +2,7 @@
 
 Progressive Two-Point Recovery repositions or expands one RGB channel from operator-selected neutral dark and bright samples. It is intended for a faded scan in which one channel still contains useful tonal structure but its black level, white level, or total span no longer follows the other two channels.
 
-This is assisted endpoint matching, not full-frame automatic analysis. A per-pixel Transform DCTL has no practical once-per-frame histogram or cached scene state. The operator supplies two samples; the DCTL performs a deterministic correction for every pixel.
+This is assisted endpoint matching, not full-frame automatic analysis. You supply two samples; the DCTL applies the resulting correction consistently to every pixel.
 
 The setup is progressive. The dark sample produces an immediate black-point correction. The bright sample then completes the range stretch around that corrected black point.
 
@@ -41,14 +41,12 @@ The recovery stage does not copy donor pixels and does not clamp its result to `
 - **Recovery Strength:** Blend from the original target channel at `0` to the calculated correction at `1`.
 - **Recovery Max Gain:** Upper limit for expansion, from `1.0` to `8.0`; default `4.0`.
 
-Resolve groups DCTL controls by control type rather than strictly preserving declaration order. Recovery Strength and Recovery Max Gain appear with the sliders, while Recovery Target and the two color pickers appear with combo-box and picker controls.
-
 ## What Auto actually detects
 
 `Auto` is conservative and sample-driven:
 
-- **After Step 1:** it makes a provisional choice only if one sampled dark-channel value lies clearly outside the interval formed by the other two. The absolute outlier must exceed the internal `0.02` threshold and be unique.
-- **After Step 2:** it reassesses all three channels and selects one only if it is uniquely narrower than both peers or consistently lower at both sampled endpoints. Scores are normalized against the two-channel reference span and must exceed `0.02`.
+- **After Step 1:** it makes a provisional choice only when one sampled dark-channel value is a clear, unique outlier relative to the other two.
+- **After Step 2:** it reassesses all three channels and selects one only when it is clearly narrower than both peers or consistently lower at both sampled endpoints.
 - **Ambiguity:** ties, weak differences, naturally colored samples, and conflicting evidence return identity.
 
 Because the Step 1 choice has less evidence, the selected channel can change when Step 2 is supplied. That is expected. Choose Red, Green, or Blue explicitly when inspection or film knowledge already identifies the damaged record.
@@ -57,7 +55,7 @@ Two neutral samples cannot prove whether a difference comes from dye fading, sce
 
 ## Recommended workflow
 
-1. Decide where the DCTL belongs in the node pipeline. Recovery samples always describe the RGB values entering this DCTL.
+1. Place the DCTL where its input represents the RGB values you want to balance. Recovery samples always describe the image entering this DCTL.
 2. Set Preset to `None` while evaluating the endpoints.
 3. Reset both recovery pickers if reusing a node. Dark resets to black and Bright resets to white.
 4. Use Channel Preview and scopes to confirm that the suspected channel still contains tonal detail.
@@ -72,7 +70,7 @@ The two samples should be under the same illumination and preferably represent t
 
 ## Why the picker values do not concatenate visibly
 
-The bright picker's displayed RGB remains the raw node-input sample. A DCTL UI control cannot read an intermediate pixel from its own transform or overwrite its own picker value. The rendered calculation still concatenates Step 1 internally.
+The bright picker's displayed RGB remains the original sample. The DCTL still applies the dark correction to that stored bright sample before it calculates the range stretch, so the rendered result is sequential even though the picker display does not change.
 
 Use two serial DCTL nodes only when you specifically need the second picker's **visible UI readout** to come from an already processed node, or when you intentionally want to split the wider processing pipeline between nodes. One node is sufficient for the recovery-stage endpoint math.
 
@@ -105,12 +103,6 @@ The DCTL does not know the input color space. Log, scene-linear, and display-ref
 
 Faded Balancer DCTL v1.7.0 targets DaVinci Resolve 19.1 or later.
 
-## Numerical validation
+## What to expect
 
-Run:
-
-```bash
-python3 tools/test_range_recovery.py
-```
-
-The suite checks disabled identity, immediate dark preview, automatic and explicit selection, the sequential affine composition, endpoint mapping, shifted-low channels, ambiguity rejection, strength, maximum gain, invalid samples, non-finite controls, full-float behavior, RGB permutations, and randomized safety cases.
+Recovery is deliberately conservative. It works best when one channel has been compressed or shifted by fading but still contains usable image structure. If a channel is clipped, flat, or genuinely missing detail, reduce the strength, use a different correction approach, or leave recovery off.
