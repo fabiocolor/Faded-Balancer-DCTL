@@ -1,10 +1,10 @@
-// FadedBalancerDCTL v1.6.0
+// FadedBalancerDCTL v1.7.0
 // DaVinci Resolve DCTL plugin to rebalance RGB for faded film scans.
 //
-// Pipeline (per-pixel): presets → global → fade → per-channel → (optional preserve luminance) → channel mixer → enhanced mixing (darken/lighten + shadow/highlight masks + donor luminance) → replace → removal → channel isolation → (optional linear→Cineon) output
+// Pipeline (per-pixel): two-point faded-channel recovery → presets → global → fade → per-channel → (optional preserve luma) → masked channel matrix → masked min/max mixing → replace → removal → channel isolation → optional diagnostic log preview
 //
 // Notes (concise):
-// - Preserve Luminance: re‑normalize luma after per‑channel adjustments.
+// - Preserve Luminance: re-normalize Rec.709-weighted luma across per-channel adjustments only.
 // - Presets: non‑destructive starting points; modify local copies only.
 //
 // --- Preset identifiers & selector
@@ -21,6 +21,10 @@
 #define PRESET_EASTMAN10 10
 
 DEFINE_UI_PARAMS(presetMode, Preset, DCTLUI_COMBO_BOX, 0, { PRESET_NONE, PRESET_EASTMAN1, PRESET_EASTMAN2, PRESET_EASTMAN3, PRESET_EASTMAN4, PRESET_EASTMAN5, PRESET_EASTMAN6, PRESET_EASTMAN7, PRESET_EASTMAN8, PRESET_EASTMAN9, PRESET_EASTMAN10 }, { None, Red Compress Mid, Balanced Aggregate, Red Compress Hi Lift, Red Comp Blue Tweak, Heavy Red Crush, Mild Corrective, Neutral Red Mid Tweak, Strong Red Compress, Neg Offset Blue Cut, Highlight Lift Blue Shadow })
+// Resolve supplies zero for a newly introduced checkbox when an existing node
+// is upgraded. Make zero the compatibility-preserving state: presets retain
+// their historical optional Blue Darken request unless the user opts out.
+DEFINE_UI_PARAMS(presetTonalOnly, 🧩 Preset Tonal Only, DCTLUI_CHECK_BOX, 0)
 // (presetBlend removed — presets apply directly to local copies before processing)
 
 
@@ -76,28 +80,38 @@ DEFINE_UI_PARAMS(presetMode, Preset, DCTLUI_COMBO_BOX, 0, { PRESET_NONE, PRESET_
 #define ISO_BLUE  3
 
 
+// Stage 0: Assisted two-point recovery for a compacted or shifted channel.
+// Combo identifiers are emitted by Resolve. Keep them bare in the enum list
+// and use literal numeric values in the transform to avoid Metal macro clashes.
+DEFINE_UI_PARAMS(rangeRecoveryMode, 🎯 Recovery Target, DCTLUI_COMBO_BOX, 0, { RR_OFF, RR_AUTO, RR_RED, RR_GREEN, RR_BLUE }, { Off, Auto, Red, Green, Blue })
+DEFINE_UI_PARAMS(rangeRecoveryDark, ⚫ Step 1 Dark Neutral, DCTLUI_COLOR_PICKER, 0.0f, 0.0f, 0.0f)
+DEFINE_UI_PARAMS(rangeRecoveryBright, ⚪ Step 2 Bright Neutral, DCTLUI_COLOR_PICKER, 1.0f, 1.0f, 1.0f)
+DEFINE_UI_PARAMS(rangeRecoveryStrength, 🧪 Recovery Strength, DCTLUI_SLIDER_FLOAT, 1.0f, 0.0f, 1.0f, 0.001f)
+DEFINE_UI_PARAMS(rangeRecoveryMaxGain, 🛡️ Recovery Max Gain, DCTLUI_SLIDER_FLOAT, 4.0f, 1.0f, 8.0f, 0.01f)
+
+
 // Stage 1: Global controls
 DEFINE_UI_PARAMS(globalOffset,   🌐 Global Offset,   DCTLUI_SLIDER_FLOAT, 0.0f, -0.5f, 0.5f, 0.001f)
-DEFINE_UI_PARAMS(globalShadows,  🌑 Global Shadows,  DCTLUI_SLIDER_FLOAT, 0.0f, -0.5f, 0.5f, 0.001f)
-DEFINE_UI_PARAMS(globalMidtones, 🌓 Global Midtones, DCTLUI_SLIDER_FLOAT, 1.0f,  0.1f, 3.0f, 0.001f)
-DEFINE_UI_PARAMS(globalHighlights, 🌕 Global Highlights, DCTLUI_SLIDER_FLOAT, 1.0f, 0.1f, 3.0f, 0.001f)
+DEFINE_UI_PARAMS(globalShadows,  🌑 Global Lift,  DCTLUI_SLIDER_FLOAT, 0.0f, -0.5f, 0.5f, 0.001f)
+DEFINE_UI_PARAMS(globalMidtones, 🌓 Global Gamma, DCTLUI_SLIDER_FLOAT, 1.0f,  0.1f, 3.0f, 0.001f)
+DEFINE_UI_PARAMS(globalHighlights, 🌕 Global Gain, DCTLUI_SLIDER_FLOAT, 1.0f, 0.1f, 3.0f, 0.001f)
 
 // Stage 2: Fade Correction
 DEFINE_UI_PARAMS(fadeCorrection, ✨ Fade Correction, DCTLUI_SLIDER_FLOAT, 0.0f, 0.0f, 1.0f, 0.001f)
 
 // Stage 3: Per‑channel controls
 DEFINE_UI_PARAMS(redOffset,     🔴 Red Offset,     DCTLUI_SLIDER_FLOAT, 0.0f, -0.5f, 0.5f, 0.001f)
-DEFINE_UI_PARAMS(redShadows,    🔴 Red Shadows,    DCTLUI_SLIDER_FLOAT, 0.0f, -0.5f, 0.5f, 0.001f)
-DEFINE_UI_PARAMS(redMidtones,   🔴 Red Midtones,   DCTLUI_SLIDER_FLOAT, 1.0f,  0.1f, 3.0f, 0.001f)
-DEFINE_UI_PARAMS(redHighlights, 🔴 Red Highlights, DCTLUI_SLIDER_FLOAT, 1.0f,  0.1f, 3.0f, 0.001f)
+DEFINE_UI_PARAMS(redShadows,    🔴 Red Lift,    DCTLUI_SLIDER_FLOAT, 0.0f, -0.5f, 0.5f, 0.001f)
+DEFINE_UI_PARAMS(redMidtones,   🔴 Red Gamma,   DCTLUI_SLIDER_FLOAT, 1.0f,  0.1f, 3.0f, 0.001f)
+DEFINE_UI_PARAMS(redHighlights, 🔴 Red Gain, DCTLUI_SLIDER_FLOAT, 1.0f,  0.1f, 3.0f, 0.001f)
 DEFINE_UI_PARAMS(greenOffset,     🟢 Green Offset,     DCTLUI_SLIDER_FLOAT, 0.0f, -0.5f, 0.5f, 0.001f)
-DEFINE_UI_PARAMS(greenShadows,    🟢 Green Shadows,    DCTLUI_SLIDER_FLOAT, 0.0f, -0.5f, 0.5f, 0.001f)
-DEFINE_UI_PARAMS(greenMidtones,   🟢 Green Midtones,   DCTLUI_SLIDER_FLOAT, 1.0f,  0.1f, 3.0f, 0.001f)
-DEFINE_UI_PARAMS(greenHighlights, 🟢 Green Highlights, DCTLUI_SLIDER_FLOAT, 1.0f,  0.1f, 3.0f, 0.001f)
+DEFINE_UI_PARAMS(greenShadows,    🟢 Green Lift,    DCTLUI_SLIDER_FLOAT, 0.0f, -0.5f, 0.5f, 0.001f)
+DEFINE_UI_PARAMS(greenMidtones,   🟢 Green Gamma,   DCTLUI_SLIDER_FLOAT, 1.0f,  0.1f, 3.0f, 0.001f)
+DEFINE_UI_PARAMS(greenHighlights, 🟢 Green Gain, DCTLUI_SLIDER_FLOAT, 1.0f,  0.1f, 3.0f, 0.001f)
 DEFINE_UI_PARAMS(blueOffset,     🔵 Blue Offset,     DCTLUI_SLIDER_FLOAT, 0.0f, -0.5f, 0.5f, 0.001f)
-DEFINE_UI_PARAMS(blueShadows,    🔵 Blue Shadows,    DCTLUI_SLIDER_FLOAT, 0.0f, -0.5f, 0.5f, 0.001f)
-DEFINE_UI_PARAMS(blueMidtones,   🔵 Blue Midtones,   DCTLUI_SLIDER_FLOAT, 1.0f,  0.1f, 3.0f, 0.001f)
-DEFINE_UI_PARAMS(blueHighlights, 🔵 Blue Highlights, DCTLUI_SLIDER_FLOAT, 1.0f,  0.1f, 3.0f, 0.001f)
+DEFINE_UI_PARAMS(blueShadows,    🔵 Blue Lift,    DCTLUI_SLIDER_FLOAT, 0.0f, -0.5f, 0.5f, 0.001f)
+DEFINE_UI_PARAMS(blueMidtones,   🔵 Blue Gamma,   DCTLUI_SLIDER_FLOAT, 1.0f,  0.1f, 3.0f, 0.001f)
+DEFINE_UI_PARAMS(blueHighlights, 🔵 Blue Gain, DCTLUI_SLIDER_FLOAT, 1.0f,  0.1f, 3.0f, 0.001f)
 
 // Stage 4: Preserve Luminance (applies after per-channel)
 DEFINE_UI_PARAMS(preserveLuminance, ⚖️ Preserve Luminance, DCTLUI_CHECK_BOX, 0)
@@ -136,129 +150,342 @@ DEFINE_UI_PARAMS(channelRemovalMode, 🗑️ Channel Removal, DCTLUI_COMBO_BOX, 
 // Stage 9: Channel Preview (isolation for inspection)
 DEFINE_UI_PARAMS(channelIsolation, 👁️ Channel Preview, DCTLUI_COMBO_BOX, 0, { ISO_NONE, ISO_RED, ISO_GREEN, ISO_BLUE }, { Normal, Red Only, Green Only, Blue Only })
 
-// Stage 10: Output to Cineon Log
-DEFINE_UI_PARAMS(outputToCineon, 🎞️ Output to Cineon Log, DCTLUI_CHECK_BOX, 0)
+// Stage 10: diagnostic display compression (legacy parameter name retained)
+DEFINE_UI_PARAMS(outputToCineon, 🔎 Diagnostic Log Preview, DCTLUI_CHECK_BOX, 0)
 
 
 // Short help text shown in the plugin UI (Resolve 19.1+). Tooltips must reference
 // the UI LABEL token (not the parameter identifier) per vendor macro spec.
 DEFINE_UI_TOOLTIP(Preset, "Starting looks for faded film")
-DEFINE_UI_TOOLTIP(✨ Fade Correction, "Restore contrast & color fade")
-DEFINE_UI_TOOLTIP(🎭 Mixing Shadows, "Apply darken/lighten only in shadows")
-DEFINE_UI_TOOLTIP(🎭 Mixing Highlights, "Apply darken/lighten only in highlights")
-DEFINE_UI_TOOLTIP(🎭 Donor Luminance, "Adjust brightness of donor channel before mixing")
+DEFINE_UI_TOOLTIP(🧩 Preset Tonal Only, "Disable presets' optional Blue Darken request and keep only their tonal recipe")
+DEFINE_UI_TOOLTIP(🎯 Recovery Target, "Off, conservatively auto-select, or choose the target channel")
+DEFINE_UI_TOOLTIP(⚫ Step 1 Dark Neutral, "Pick first; immediately aligns the target channel at the dark point")
+DEFINE_UI_TOOLTIP(⚪ Step 2 Bright Neutral, "Pick second; completes the stretch after the internal dark correction")
+DEFINE_UI_TOOLTIP(🧪 Recovery Strength, "Blend the original and two-point recovered channel")
+DEFINE_UI_TOOLTIP(🛡️ Recovery Max Gain, "Limit noise amplification from a compacted channel")
+DEFINE_UI_TOOLTIP(✨ Fade Correction, "Apply a deterministic normalized-luma contrast and chroma nudge")
+DEFINE_UI_TOOLTIP(🎭 Mixing Shadows, "Weight matrix and min/max mixing toward shadows")
+DEFINE_UI_TOOLTIP(🎭 Mixing Highlights, "Weight matrix and min/max mixing toward highlights")
+DEFINE_UI_TOOLTIP(🎭 Donor Luminance, "Scale donor contributions in matrix and min/max mixing")
 DEFINE_UI_TOOLTIP(👁️ Channel Preview, "Isolate single channel for preview")
 DEFINE_UI_TOOLTIP(🌐 Global Offset, "Raise or lower whole image")
-DEFINE_UI_TOOLTIP(🌑 Global Shadows, "Lift or deepen shadows")
-DEFINE_UI_TOOLTIP(🌓 Global Midtones, "Adjust mid contrast")
-DEFINE_UI_TOOLTIP(🌕 Global Highlights, "Lift or tame highlights")
-DEFINE_UI_TOOLTIP(⚖️ Preserve Luminance, "Keep overall brightness")
+DEFINE_UI_TOOLTIP(🌑 Global Lift, "Legacy additive lift; same response as Offset and retained for grade compatibility")
+DEFINE_UI_TOOLTIP(🌓 Global Gamma, "Signed power adjustment; 1.0 is neutral")
+DEFINE_UI_TOOLTIP(🌕 Global Gain, "Multiply all RGB code values; 1.0 is neutral")
+DEFINE_UI_TOOLTIP(⚖️ Preserve Luminance, "Preserve Rec.709-weighted luma across the per-channel stage only")
 DEFINE_UI_TOOLTIP(🔴 Red Offset, "Shift red overall")
-DEFINE_UI_TOOLTIP(🔴 Red Shadows, "Correct red in shadows")
-DEFINE_UI_TOOLTIP(🔴 Red Midtones, "Compress / expand red mids")
-DEFINE_UI_TOOLTIP(🔴 Red Highlights, "Adjust red in highlights")
+DEFINE_UI_TOOLTIP(🔴 Red Lift, "Legacy additive red lift; retained for grade compatibility")
+DEFINE_UI_TOOLTIP(🔴 Red Gamma, "Signed red-channel power adjustment")
+DEFINE_UI_TOOLTIP(🔴 Red Gain, "Multiply the red channel")
 DEFINE_UI_TOOLTIP(🟢 Green Offset, "Shift green overall")
-DEFINE_UI_TOOLTIP(🟢 Green Shadows, "Correct green in shadows")
-DEFINE_UI_TOOLTIP(🟢 Green Midtones, "Adjust green mids")
-DEFINE_UI_TOOLTIP(🟢 Green Highlights, "Adjust green highlights")
+DEFINE_UI_TOOLTIP(🟢 Green Lift, "Legacy additive green lift; retained for grade compatibility")
+DEFINE_UI_TOOLTIP(🟢 Green Gamma, "Signed green-channel power adjustment")
+DEFINE_UI_TOOLTIP(🟢 Green Gain, "Multiply the green channel")
 DEFINE_UI_TOOLTIP(🔵 Blue Offset, "Shift blue overall")
-DEFINE_UI_TOOLTIP(🔵 Blue Shadows, "Correct blue in shadows")
-DEFINE_UI_TOOLTIP(🔵 Blue Midtones, "Adjust blue mids")
-DEFINE_UI_TOOLTIP(🔵 Blue Highlights, "Adjust blue highlights")
-DEFINE_UI_TOOLTIP(🔴📈 Red from G, "Boost red highlights using green")
-DEFINE_UI_TOOLTIP(🔴📈 Red from B, "Boost red highlights using blue")
-DEFINE_UI_TOOLTIP(🟢📈 Green from R, "Boost green highlights using red")
-DEFINE_UI_TOOLTIP(🟢📈 Green from B, "Boost green highlights using blue")
-DEFINE_UI_TOOLTIP(🔵📈 Blue from R, "Boost blue highlights using red")
-DEFINE_UI_TOOLTIP(🔵📈 Blue from G, "Boost blue highlights using green")
-DEFINE_UI_TOOLTIP(🔴🌙 Red Darken, "Red takes darker value")
-DEFINE_UI_TOOLTIP(🔴☀️ Red Lighten, "Red takes lighter value")
-DEFINE_UI_TOOLTIP(🟢🌙 Green Darken, "Green takes darker value")
-DEFINE_UI_TOOLTIP(🟢☀️ Green Lighten, "Green takes lighter value")
-DEFINE_UI_TOOLTIP(🔵🌙 Blue Darken, "Blue takes darker value")
-DEFINE_UI_TOOLTIP(🔵☀️ Blue Lighten, "Blue takes lighter value")
+DEFINE_UI_TOOLTIP(🔵 Blue Lift, "Legacy additive blue lift; retained for grade compatibility")
+DEFINE_UI_TOOLTIP(🔵 Blue Gamma, "Signed blue-channel power adjustment")
+DEFINE_UI_TOOLTIP(🔵 Blue Gain, "Multiply the blue channel")
+DEFINE_UI_TOOLTIP(🔴📈 Red from G, "Add green-channel structure into red; tonal weights and donor scale apply")
+DEFINE_UI_TOOLTIP(🔴📈 Red from B, "Add blue-channel structure into red; tonal weights and donor scale apply")
+DEFINE_UI_TOOLTIP(🟢📈 Green from R, "Add red-channel structure into green; tonal weights and donor scale apply")
+DEFINE_UI_TOOLTIP(🟢📈 Green from B, "Add blue-channel structure into green; tonal weights and donor scale apply")
+DEFINE_UI_TOOLTIP(🔵📈 Blue from R, "Add red-channel structure into blue; tonal weights and donor scale apply")
+DEFINE_UI_TOOLTIP(🔵📈 Blue from G, "Add green-channel structure into blue; tonal weights and donor scale apply")
+DEFINE_UI_TOOLTIP(🔴🌙 Red Darken, "Blend red toward the lower target/donor value through the tonal weight")
+DEFINE_UI_TOOLTIP(🔴☀️ Red Lighten, "Blend red toward the higher target/donor value through the tonal weight")
+DEFINE_UI_TOOLTIP(🟢🌙 Green Darken, "Blend green toward the lower target/donor value through the tonal weight")
+DEFINE_UI_TOOLTIP(🟢☀️ Green Lighten, "Blend green toward the higher target/donor value through the tonal weight")
+DEFINE_UI_TOOLTIP(🔵🌙 Blue Darken, "Blend blue toward the lower target/donor value through the tonal weight")
+DEFINE_UI_TOOLTIP(🔵☀️ Blue Lighten, "Blend blue toward the higher target/donor value through the tonal weight")
 DEFINE_UI_TOOLTIP(🔴↔ Replace Red, "Copy other channel into red")
 DEFINE_UI_TOOLTIP(🟢↔ Replace Green, "Copy other channel into green")
 DEFINE_UI_TOOLTIP(🔵↔ Replace Blue, "Copy other channel into blue")
 DEFINE_UI_TOOLTIP(🗑️ Channel Removal, "Mute channel(s) for check")
-DEFINE_UI_TOOLTIP(🎞️ Output to Cineon Log, "View in Cineon log space")
+DEFINE_UI_TOOLTIP(🔎 Diagnostic Log Preview, "Monotonic display compression for inspection; not a Cineon or delivery transform")
 
 
 
 // Helper functions used in the processing pipeline (GPU‑safe).
 // Map:
-// - safe_pow: power with base clamp
-// - applyLGGO: per‑channel Offset/Shadows/Midtones(γ)/Highlights
-// - applyFadeCorrection: gentle contrast/saturation recovery
-// - linearToCineon: linear → Cineon‑like log (inspection)
+// - safeSignedPow: full-float signed power with exact neutral identity
+// - applyLGGO: legacy Offset/Lift/Gamma/Gain adjustment
+// - applyFadeCorrection: deterministic luma/chroma curve with full-float extension
+// - diagnosticLogPreview: monotonic positive display compression
 
-// safe_pow: power with base clamp to avoid NaNs.
-__DEVICE__ float safe_pow(float x, float y) { return _powf(_fmaxf(x, 1e-9f), y); }
+__DEVICE__ float safeSignedPow(float value, float exponent) {
+    if (isnan(value) || isinf(value) || isnan(exponent) || isinf(exponent)) return value;
+    if (_fabs(exponent - 1.0f) <= 1e-7f) return value;
+    float magnitude = _powf(_fabs(value), exponent);
+    if (isnan(magnitude) || isinf(magnitude)) return value;
+    return (value < 0.0f) ? -magnitude : magnitude;
+}
 
-// applyLGGO: per‑channel Offset/Shadows/Midtones(γ)/Highlights.
+// Two-point faded-channel recovery helpers. Channel IDs are Red=0, Green=1,
+// Blue=2. The UI mode is Off=0, Auto=1, Red=2, Green=3, Blue=4.
+__DEVICE__ float recoveryChannelValue(float3 value, int channel) {
+    if (channel == 0) return value.x;
+    if (channel == 1) return value.y;
+    return value.z;
+}
+
+__DEVICE__ float3 setRecoveryChannelValue(float3 value, int channel, float replacement) {
+    if (channel == 0) value.x = replacement;
+    else if (channel == 1) value.y = replacement;
+    else value.z = replacement;
+    return value;
+}
+
+__DEVICE__ float recoveryOtherMean(float3 value, int channel) {
+    if (channel == 0) return 0.5f * (value.y + value.z);
+    if (channel == 1) return 0.5f * (value.x + value.z);
+    return 0.5f * (value.x + value.y);
+}
+
+__DEVICE__ int recoverySampleFinite(float3 sample) {
+    return (!isnan(sample.x) && !isinf(sample.x) &&
+        !isnan(sample.y) && !isinf(sample.y) &&
+        !isnan(sample.z) && !isinf(sample.z)) ? 1 : 0;
+}
+
+// The picker defaults are also the setup-state sentinels. An all-zero dark
+// sample and all-one bright sample are clipped endpoints and are unsuitable for
+// recovery anyway, so treating them as "not picked" is fail-safe.
+__DEVICE__ int recoveryDarkSampleReady(float3 darkSample) {
+    if (recoverySampleFinite(darkSample) == 0) return 0;
+    float distanceFromDefault = _fmaxf(_fabs(darkSample.x),
+        _fmaxf(_fabs(darkSample.y), _fabs(darkSample.z)));
+    return (distanceFromDefault > 1e-6f) ? 1 : 0;
+}
+
+__DEVICE__ int recoveryBrightSampleReady(float3 brightSample) {
+    if (recoverySampleFinite(brightSample) == 0) return 0;
+    float distanceFromDefault = _fmaxf(_fabs(brightSample.x - 1.0f),
+        _fmaxf(_fabs(brightSample.y - 1.0f), _fabs(brightSample.z - 1.0f)));
+    return (distanceFromDefault > 1e-6f) ? 1 : 0;
+}
+
+__DEVICE__ int recoverySamplesValid(float3 darkSample, float3 brightSample) {
+    if (recoverySampleFinite(darkSample) == 0 ||
+        recoverySampleFinite(brightSample) == 0) return 0;
+
+    float3 span = brightSample - darkSample;
+    return (span.x > 1e-6f && span.y > 1e-6f && span.z > 1e-6f) ? 1 : 0;
+}
+
+// Before the bright sample exists, Auto can make a provisional dark-point
+// choice only when one channel lies uniquely outside the range of the other
+// two. This gives immediate Step 1 feedback while remaining conservative.
+__DEVICE__ float recoveryDarkCandidateScore(float3 darkSample, int channel) {
+    float target = recoveryChannelValue(darkSample, channel);
+    float peerMin;
+    float peerMax;
+    if (channel == 0) {
+        peerMin = _fminf(darkSample.y, darkSample.z);
+        peerMax = _fmaxf(darkSample.y, darkSample.z);
+    } else if (channel == 1) {
+        peerMin = _fminf(darkSample.x, darkSample.z);
+        peerMax = _fmaxf(darkSample.x, darkSample.z);
+    } else {
+        peerMin = _fminf(darkSample.x, darkSample.y);
+        peerMax = _fmaxf(darkSample.x, darkSample.y);
+    }
+    return _fmaxf(0.0f, _fmaxf(peerMin - target, target - peerMax));
+}
+
+__DEVICE__ int recoveryDarkTargetChannel(float3 darkSample, int mode) {
+    if (mode >= 2 && mode <= 4) return mode - 2;
+    if (mode != 1 || recoveryDarkSampleReady(darkSample) == 0) return -1;
+
+    float redScore = recoveryDarkCandidateScore(darkSample, 0);
+    float greenScore = recoveryDarkCandidateScore(darkSample, 1);
+    float blueScore = recoveryDarkCandidateScore(darkSample, 2);
+    float threshold = 0.02f;
+    float uniqueMargin = 1e-6f;
+
+    if (redScore > threshold && redScore > greenScore + uniqueMargin &&
+        redScore > blueScore + uniqueMargin) return 0;
+    if (greenScore > threshold && greenScore > redScore + uniqueMargin &&
+        greenScore > blueScore + uniqueMargin) return 1;
+    if (blueScore > threshold && blueScore > redScore + uniqueMargin &&
+        blueScore > greenScore + uniqueMargin) return 2;
+    return -1;
+}
+
+// Conservative Auto score: select a channel only when it is uniquely narrower
+// than both peers, or shifted lower at both sampled endpoints. Two neutral
+// samples cannot distinguish subtler scene colour from fading, so ambiguity is
+// an intentional identity result.
+__DEVICE__ float recoveryCandidateScore(float3 darkSample, float3 brightSample, int channel) {
+    float3 span = brightSample - darkSample;
+    float targetSpan = recoveryChannelValue(span, channel);
+    float referenceSpan = recoveryOtherMean(brightSample, channel) -
+        recoveryOtherMean(darkSample, channel);
+    if (targetSpan <= 1e-6f || referenceSpan <= 1e-6f) return 0.0f;
+
+    float peerSpanMin;
+    float peerDarkMin;
+    float peerBrightMin;
+    if (channel == 0) {
+        peerSpanMin = _fminf(span.y, span.z);
+        peerDarkMin = _fminf(darkSample.y, darkSample.z);
+        peerBrightMin = _fminf(brightSample.y, brightSample.z);
+    } else if (channel == 1) {
+        peerSpanMin = _fminf(span.x, span.z);
+        peerDarkMin = _fminf(darkSample.x, darkSample.z);
+        peerBrightMin = _fminf(brightSample.x, brightSample.z);
+    } else {
+        peerSpanMin = _fminf(span.x, span.y);
+        peerDarkMin = _fminf(darkSample.x, darkSample.y);
+        peerBrightMin = _fminf(brightSample.x, brightSample.y);
+    }
+
+    float spanMargin = (peerSpanMin - targetSpan) / referenceSpan;
+    float darkMargin = (peerDarkMin - recoveryChannelValue(darkSample, channel)) /
+        referenceSpan;
+    float brightMargin = (peerBrightMin - recoveryChannelValue(brightSample, channel)) /
+        referenceSpan;
+    float levelMargin = _fminf(darkMargin, brightMargin);
+    return _fmaxf(0.0f, _fmaxf(spanMargin, levelMargin));
+}
+
+__DEVICE__ int recoveryTargetChannel(float3 darkSample, float3 brightSample, int mode) {
+    if (mode >= 2 && mode <= 4) return mode - 2;
+    if (mode != 1 || recoverySamplesValid(darkSample, brightSample) == 0) return -1;
+
+    float redScore = recoveryCandidateScore(darkSample, brightSample, 0);
+    float greenScore = recoveryCandidateScore(darkSample, brightSample, 1);
+    float blueScore = recoveryCandidateScore(darkSample, brightSample, 2);
+    float threshold = 0.02f;
+    float uniqueMargin = 1e-6f;
+
+    if (redScore > threshold && redScore > greenScore + uniqueMargin &&
+        redScore > blueScore + uniqueMargin) return 0;
+    if (greenScore > threshold && greenScore > redScore + uniqueMargin &&
+        greenScore > blueScore + uniqueMargin) return 1;
+    if (blueScore > threshold && blueScore > redScore + uniqueMargin &&
+        blueScore > greenScore + uniqueMargin) return 2;
+    return -1;
+}
+
+__DEVICE__ float3 applyRangeRecovery(float3 color, float3 darkSample,
+    float3 brightSample, int mode, float strength, float maximumGain) {
+    if (mode == 0 || strength <= 0.0f) return color;
+    if (isnan(strength) || isinf(strength) ||
+        isnan(maximumGain) || isinf(maximumGain)) return color;
+    if (recoverySampleFinite(darkSample) == 0 ||
+        recoverySampleFinite(brightSample) == 0) return color;
+    if (recoveryDarkSampleReady(darkSample) == 0) return color;
+
+    int brightReady = recoveryBrightSampleReady(brightSample);
+    if (brightReady != 0 &&
+        recoverySamplesValid(darkSample, brightSample) == 0) return color;
+
+    int channel = (brightReady != 0) ?
+        recoveryTargetChannel(darkSample, brightSample, mode) :
+        recoveryDarkTargetChannel(darkSample, mode);
+    if (channel < 0) return color;
+
+    float targetBlack = recoveryChannelValue(darkSample, channel);
+    float referenceBlack = recoveryOtherMean(darkSample, channel);
+    float inputValue = recoveryChannelValue(color, channel);
+    float darkOffset = referenceBlack - targetBlack;
+    float darkCorrectedValue = inputValue + darkOffset;
+    float mappedValue = darkCorrectedValue;
+
+    if (brightReady != 0) {
+        float targetWhite = recoveryChannelValue(brightSample, channel);
+        float referenceWhite = recoveryOtherMean(brightSample, channel);
+
+        // Picker 2 is in the node-input domain. Concatenate Step 1 by applying
+        // its offset to the stored bright value, then stretch around the
+        // corrected black pivot. At full strength this is the same affine math
+        // as a dark-offset stage followed by a pivoted white-point stage.
+        float correctedTargetWhite = targetWhite + darkOffset;
+        float correctedTargetSpan = correctedTargetWhite - referenceBlack;
+        float referenceSpan = referenceWhite - referenceBlack;
+        if (correctedTargetSpan <= 1e-6f || referenceSpan <= 1e-6f) return color;
+
+        float rawGain = referenceSpan / correctedTargetSpan;
+        if (rawGain <= 0.0f || isnan(rawGain) || isinf(rawGain)) return color;
+        float gainLimit = _fmaxf(1.0f, _fminf(maximumGain, 8.0f));
+        float gain = _fminf(rawGain, gainLimit);
+        mappedValue = referenceBlack +
+            (darkCorrectedValue - referenceBlack) * gain;
+    }
+
+    float outputValue = inputValue +
+        _fmaxf(0.0f, _fminf(strength, 1.0f)) * (mappedValue - inputValue);
+    if ((isnan(outputValue) || isinf(outputValue)) &&
+        !(isnan(inputValue) || isinf(inputValue))) return color;
+    return setRecoveryChannelValue(color, channel, outputValue);
+}
+
+// applyLGGO: legacy per-channel Offset/Lift/Gamma/Gain.
 //   col: input color
 //   offset: additive
-//   shadows: additive (shadows)
-//   midtones: exponent (1.0 = neutral)
-//   highlights: scale (1.0 = neutral)
+//   lift: legacy additive control retained for saved-grade compatibility
+//   gamma: power control (1.0 = neutral)
+//   gain: scale (1.0 = neutral)
 __DEVICE__ float3 applyLGGO(float3 col, float3 offset, float3 shadows, float3 midtones, float3 highlights) {
     col += offset;
     col += shadows;
-    col.x = safe_pow(col.x, 1.0f / midtones.x);
-    col.y = safe_pow(col.y, 1.0f / midtones.y);
-    col.z = safe_pow(col.z, 1.0f / midtones.z);
+    col.x = safeSignedPow(col.x, 1.0f / midtones.x);
+    col.y = safeSignedPow(col.y, 1.0f / midtones.y);
+    col.z = safeSignedPow(col.z, 1.0f / midtones.z);
     col *= highlights;
     return col;
 }
 
-// applyFadeCorrection: midtone‑weighted contrast/saturation recovery; preserves overall brightness.
+// applyFadeCorrection: deterministic luma-dependent contrast and saturation
+// nudge. Within 0..1 it preserves the legacy curve. Below black and above one,
+// the bounded curve delta is zero so full-float excursions remain monotonic.
 __DEVICE__ float3 applyFadeCorrection(float3 col, float fadeCorrection) {
-    if (fadeCorrection > 0.0f) {
+    if (fadeCorrection > 0.0f && !isnan(fadeCorrection) && !isinf(fadeCorrection)) {
+        float amount = _fmaxf(0.0f, _fminf(fadeCorrection, 1.0f));
         float luma = col.x * 0.2126f + col.y * 0.7152f + col.z * 0.0722f;
-        // smooth contrast curve (ease-in/out)
-        float contrastedLuma = luma * luma * (3.0f - 2.0f * luma);
-        float finalLuma = _mix(luma, contrastedLuma, fadeCorrection); // fadeCorrection in [0,1]
+        float boundedLuma = _fmaxf(0.0f, _fminf(luma, 1.0f));
+        float boundedContrast = boundedLuma * boundedLuma * (3.0f - 2.0f * boundedLuma);
+        float contrastedLuma = luma + (boundedContrast - boundedLuma);
+        float finalLuma = _mix(luma, contrastedLuma, amount);
         float3 lumaColor = make_float3(luma, luma, luma);
-        // Saturation: scale chroma, but keep _mix factor within [0,1] per vendor spec
-        float satScale = 1.0f + fadeCorrection; // 1..2
-        float3 saturatedCol = lumaColor + (col - lumaColor) * satScale; // manual lerp to avoid a>1 in _mix
-        col = _mix(col, saturatedCol, fadeCorrection);
+        // Preserve the legacy gentle response explicitly: effective chroma
+        // scale is 1 + amount^2, reaching 2x only at maximum.
+        float satScale = 1.0f + amount * amount;
+        col = lumaColor + (col - lumaColor) * satScale;
         float newLuma = col.x * 0.2126f + col.y * 0.7152f + col.z * 0.0722f;
-        if (newLuma > 1e-9f) col *= finalLuma / newLuma;
+        if (_fabs(newLuma) > 1e-9f) {
+            float lumaScale = finalLuma / newLuma;
+            if (!isnan(lumaScale) && !isinf(lumaScale)) col *= lumaScale;
+        }
     }
     return col;
 }
 
-// linearToCineon: convert a linear value to a film-log like range for
-// inspection. Inputs <= 0 return 0 to avoid GPU math issues.
-__DEVICE__ float linearToCineon(float linear) {
-    if (linear <= 0.0f) return 0.0f;
-    // keep original formula but clamp result to [0,1]
-    float mapped = (1023.0f * (0.30102999566f * _log10f(linear * 0.9f) + 0.66666666667f)) / 1023.0f;
-    return _fmaxf(0.0f, _fminf(mapped, 1.0f));
+// Monotonic positive display compression. This is intentionally not labelled
+// Cineon: it is an inspection view, not a color-space or delivery transform.
+__DEVICE__ float diagnosticLogPreview(float value) {
+    if (isnan(value) || value <= 0.0f) return 0.0f;
+    if (isinf(value)) return 1.0f;
+    return 1.0f - 1.0f / (1.0f + value);
 }
 
-// applyEnhancedMixing: apply darken/lighten operations with shadow/highlight targeting
-// Uses luminance masks to selectively apply mixing operations to specific tonal ranges
-// Includes donor channel luminance adjustment for precise repair control
+__DEVICE__ float mixingTonalMask(float3 col, float shadowStrength, float highlightStrength) {
+    float luma = col.x * 0.2126f + col.y * 0.7152f + col.z * 0.0722f;
+    float boundedLuma = _fmaxf(0.0f, _fminf(luma, 1.0f));
+    float highlightMask = boundedLuma * boundedLuma;
+    float shadowMask = 1.0f - highlightMask;
+    float mask = shadowMask * shadowStrength + highlightMask * highlightStrength;
+    return _fmaxf(0.0f, _fminf(1.0f, mask));
+}
+
+// applyEnhancedMixing: min/max channel composites with broad shadow/highlight
+// weighting. If both operations target one channel, Darken is evaluated first
+// and Lighten second. The legacy Donor Luminance control scales donor values.
 __DEVICE__ float3 applyEnhancedMixing(float3 col,
     int redDarken, int redLighten, int greenDarken, int greenLighten, int blueDarken, int blueLighten,
     float shadowStrength, float highlightStrength, float donorLuminance) {
 
-    // Calculate luminance for tonal range detection
-    float luma = col.x * 0.2126f + col.y * 0.7152f + col.z * 0.0722f;
-
-    // Create smooth shadow/highlight masks
-    float shadowMask = 1.0f - luma * luma;  // Stronger in shadows, weaker in highlights
-    float highlightMask = luma * luma;      // Stronger in highlights, weaker in shadows
-
-    // Apply user control over shadow/highlight targeting
-    shadowMask *= shadowStrength;
-    highlightMask *= highlightStrength;
-
-    // Calculate total mixing mask
-    float mixingMask = shadowMask + highlightMask;
-    mixingMask = _fmaxf(0.0f, _fminf(1.0f, mixingMask));  // Clamp to [0,1]
+    float mixingMask = mixingTonalMask(col, shadowStrength, highlightStrength);
 
     // Store original values
     float3 originalRGB = col;
@@ -308,11 +535,24 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
     // Preserve incoming pixel
     float3 rgb = make_float3(p_R, p_G, p_B);
 
+    // --- 0. Assisted two-point faded-channel recovery
+    // The picker samples describe this DCTL's input domain, so recovery must
+    // precede presets and every other grading operation.
+    // Resolve exposes a color-picker UI value as DCTLColorPickerParam, not as
+    // float3, so copy its RGB components into host-independent vectors first.
+    float3 recoveryDarkSample = make_float3(
+        rangeRecoveryDark.r, rangeRecoveryDark.g, rangeRecoveryDark.b);
+    float3 recoveryBrightSample = make_float3(
+        rangeRecoveryBright.r, rangeRecoveryBright.g, rangeRecoveryBright.b);
+    rgb = applyRangeRecovery(rgb, recoveryDarkSample, recoveryBrightSample,
+        rangeRecoveryMode, rangeRecoveryStrength, rangeRecoveryMaxGain);
+
     // --- local copies of UI params (presets only modify these)
     float fadeCorrection_l          = fadeCorrection;
     float mixingShadowsStrength_l   = mixingShadowsStrength;
     float mixingHighlightsStrength_l = mixingHighlightsStrength;
     float donorLuminanceAdjust_l    = donorLuminanceAdjust;
+    int presetTonalOnly_l           = (presetTonalOnly > 0.5f) ? 1 : 0;
     int channelIsolation_l          = channelIsolation;
     float globalOffset_l            = globalOffset;
     float globalShadows_l     = globalShadows;
@@ -342,8 +582,6 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
     // --- PRESET PRE-TRANSFORM
     // prepare local preset suggestions (no UI overwrite)
     int preset_applied = 0;
-    float preset_fade = 0.0f; // deprecated: presets no longer influence fadeCorrection
-
     float p_globalOffset = 0.0f;
     float p_globalShadows = 0.0f;
     float p_globalMidtones = 1.0f;
@@ -475,7 +713,8 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
             make_float3(p_redHighlights, p_greenHighlights, p_blueHighlights));
 
     // apply preset channel suggestions
-    if (p_blueDarkenWith != BDW_NONE) blueDarkenWith_l = p_blueDarkenWith;
+    if (presetTonalOnly_l == 0 && p_blueDarkenWith != BDW_NONE &&
+        blueDarkenWith_l == BDW_NONE) blueDarkenWith_l = p_blueDarkenWith;
     }
 
     // --- 1. Global Adjust (allowed to change luminance)
@@ -499,15 +738,21 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
         make_float3(redHighlights_l, greenHighlights_l, blueHighlights_l));
     if (preserveLuminance_l > 0.5f) {
         float postChannelLuma = rgb.x * 0.2126f + rgb.y * 0.7152f + rgb.z * 0.0722f;
-        if (postChannelLuma > 1e-9f) rgb *= preChannelLuma / postChannelLuma;
+        if (_fabs(postChannelLuma) > 1e-9f) {
+            float lumaRatio = preChannelLuma / postChannelLuma;
+            if (!isnan(lumaRatio) && !isinf(lumaRatio)) rgb *= lumaRatio;
+        }
     }
 
-    // --- 5. Channel Mixer (RGB matrix transformation)
-    float3 mixed_rgb;
-    mixed_rgb.x = rgb.x * 1.0f          + rgb.y * redOutGreenIn   + rgb.z * redOutBlueIn;
-    mixed_rgb.y = rgb.x * greenOutRedIn + rgb.y * 1.0f            + rgb.z * greenOutBlueIn;
-    mixed_rgb.z = rgb.x * blueOutRedIn  + rgb.y * blueOutGreenIn  + rgb.z * 1.0f;
-    rgb = mixed_rgb;
+    // --- 5. Channel Mixer (masked additive cross-channel matrix)
+    float matrixMask = mixingTonalMask(rgb,
+        mixingShadowsStrength_l, mixingHighlightsStrength_l);
+    float3 matrixDonors = rgb * donorLuminanceAdjust_l;
+    float3 matrixCandidate;
+    matrixCandidate.x = rgb.x + matrixDonors.y * redOutGreenIn + matrixDonors.z * redOutBlueIn;
+    matrixCandidate.y = rgb.y + matrixDonors.x * greenOutRedIn + matrixDonors.z * greenOutBlueIn;
+    matrixCandidate.z = rgb.z + matrixDonors.x * blueOutRedIn + matrixDonors.y * blueOutGreenIn;
+    rgb = _mix(rgb, matrixCandidate, matrixMask);
 
     // --- 6. Enhanced Mixing (Darken / Lighten with shadow/highlight targeting and donor luminance adjustment)
     rgb = applyEnhancedMixing(rgb,
@@ -516,10 +761,12 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
         blueDarkenWith_l, blueLightenWith_l,
         mixingShadowsStrength_l, mixingHighlightsStrength_l, donorLuminanceAdjust_l);
 
-    // --- 7. Copy (use local copy sources)
-    if (copyRedSource_l == CR_FROM_GREEN) rgb.x = rgb.y; else if (copyRedSource_l == CR_FROM_BLUE) rgb.x = rgb.z;
-    if (copyGreenSource_l == CG_FROM_RED) rgb.y = rgb.x; else if (copyGreenSource_l == CG_FROM_BLUE) rgb.y = rgb.z;
-    if (copyBlueSource_l == CB_FROM_RED) rgb.z = rgb.x; else if (copyBlueSource_l == CB_FROM_GREEN) rgb.z = rgb.y;
+    // --- 7. Replace. Read every donor from one snapshot so multiple choices
+    // are simultaneous instead of cascading in UI declaration order.
+    float3 replaceSource = rgb;
+    if (copyRedSource_l == CR_FROM_GREEN) rgb.x = replaceSource.y; else if (copyRedSource_l == CR_FROM_BLUE) rgb.x = replaceSource.z;
+    if (copyGreenSource_l == CG_FROM_RED) rgb.y = replaceSource.x; else if (copyGreenSource_l == CG_FROM_BLUE) rgb.y = replaceSource.z;
+    if (copyBlueSource_l == CB_FROM_RED) rgb.z = replaceSource.x; else if (copyBlueSource_l == CB_FROM_GREEN) rgb.z = replaceSource.y;
 
     // --- 8. Removal (use local removal)
     if (channelRemovalMode_l == REM_RED || channelRemovalMode_l == REM_ALL) rgb.x = 0.0f;
@@ -529,11 +776,11 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
     // --- 9. Channel Isolation (for preview)
     rgb = applyChannelIsolation(rgb, channelIsolation_l);
 
-    // --- 10. Output (use local flag)
+    // --- 10. Diagnostic output view (legacy flag name retained)
     if (outputToCineon_l != 0) {
-        rgb.x = linearToCineon(rgb.x);
-        rgb.y = linearToCineon(rgb.y);
-        rgb.z = linearToCineon(rgb.z);
+        rgb.x = diagnosticLogPreview(rgb.x);
+        rgb.y = diagnosticLogPreview(rgb.y);
+        rgb.z = diagnosticLogPreview(rgb.z);
     }
     return rgb;
 }

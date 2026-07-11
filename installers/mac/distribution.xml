@@ -13,5 +13,5 @@
     <choice id="com.fabiocolor.FadedBalancerDCTL" visible="true">
         <pkg-ref id="com.fabiocolor.FadedBalancerDCTL"/>
     </choice>
-    <pkg-ref id="com.fabiocolor.FadedBalancerDCTL" version="1.6.0" onConclusion="none">FadedBalancerDCTL-component.pkg</pkg-ref>
+    <pkg-ref id="com.fabiocolor.FadedBalancerDCTL" version="1.7.0" onConclusion="none">FadedBalancerDCTL-component.pkg</pkg-ref>
 </installer-gui-script>

@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Create a GitHub Release for each git tag in this repo.
+# Create a GitHub Release for each git tag in this repo, or one tag selected
+# with --tag. Existing releases are left in their current draft/public state.
 # Requires: GitHub CLI (gh) authenticated with access to the repo.
 # Notes strategy (to avoid noisy auto-generated notes):
 #   1) Prefer README section: "#### What's New in <tag>"
@@ -9,11 +10,39 @@ set -euo pipefail
 #   3) Else, annotated tag message (subject + body)
 #   4) Else, concise diff summary + compare link
 
-# args
+# Options:
+#   --preview, --dry-run  Print notes/assets without changing GitHub.
+#   --tag <tag>           Process only one tag (recommended in CI).
+#   --draft               Create a missing release as a draft.
 PREVIEW=0
-for arg in "$@"; do
-  case "$arg" in
-    --preview|-n|--dry-run) PREVIEW=1 ;;
+DRAFT=0
+TAG_FILTER=""
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --preview|-n|--dry-run)
+      PREVIEW=1
+      shift
+      ;;
+    --draft)
+      DRAFT=1
+      shift
+      ;;
+    --tag)
+      if [ "$#" -lt 2 ] || [ -z "$2" ]; then
+        echo "Error: --tag requires a tag name." >&2
+        exit 2
+      fi
+      TAG_FILTER="$2"
+      shift 2
+      ;;
+    --help|-h)
+      echo "Usage: $0 [--preview] [--draft] [--tag <tag>]"
+      exit 0
+      ;;
+    *)
+      echo "Error: Unknown option: $1" >&2
+      exit 2
+      ;;
   esac
 done
 
@@ -36,7 +65,15 @@ if [ "$PREVIEW" -eq 0 ]; then
   fi
 fi
 
-tags=$(git tag --list --sort=creatordate)
+if [ -n "$TAG_FILTER" ]; then
+  if ! git rev-parse --verify --quiet "refs/tags/$TAG_FILTER" >/dev/null; then
+    echo "Error: Tag not found: $TAG_FILTER" >&2
+    exit 1
+  fi
+  tags="$TAG_FILTER"
+else
+  tags=$(git tag --list --sort=creatordate)
+fi
 
 if [ -z "${tags}" ]; then
   echo "No tags found. Nothing to release."
@@ -58,10 +95,15 @@ origin_url=$(git remote get-url origin 2>/dev/null || echo "")
 # Normalize to https://github.com/owner/repo
 repo_url=""
 if echo "$origin_url" | grep -qE '^git@github.com:'; then
-  repo_url="https://github.com/$(echo "$origin_url" | sed -E 's#git@github.com:([^/]+/[^.]+)(\.git)?#\1#')"
-  repo_url="https://github.com/${repo_url}"
+  repo_path="${origin_url#git@github.com:}"
+  repo_path="${repo_path%.git}"
+  repo_url="https://github.com/${repo_path}"
+elif echo "$origin_url" | grep -qE '^ssh://git@github.com/'; then
+  repo_path="${origin_url#ssh://git@github.com/}"
+  repo_path="${repo_path%.git}"
+  repo_url="https://github.com/${repo_path}"
 elif echo "$origin_url" | grep -qE '^https?://github.com/'; then
-  repo_url=$(echo "$origin_url" | sed -E 's#(https?://github.com/[^.]+/[^.]+)(\.git)?#\1#')
+  repo_url="${origin_url%.git}"
 fi
 if [ -z "$repo_url" ]; then
   # Fallback: try gh if available
@@ -70,8 +112,12 @@ if [ -z "$repo_url" ]; then
   fi
 fi
 
-# Iterate tags in order (compatible with older bash)
+# Iterate tags in order (compatible with older bash). When filtering to one
+# tag, retain its nearest reachable predecessor for fallback compare notes.
 prev_tag=""
+if [ -n "$TAG_FILTER" ]; then
+  prev_tag=$(git describe --tags --abbrev=0 "${TAG_FILTER}^" 2>/dev/null || true)
+fi
 save_ifs="$IFS"; IFS=$'\n'
 for tag in $tags; do
   [ -z "$tag" ] && continue
@@ -94,7 +140,7 @@ for tag in $tags; do
         if (index($0, tag) > 0) {found=1; next}
         else if (found==1) {exit}
       }
-      /^### / { if (found==1) exit }
+      /^#{1,4}[[:space:]]/ { if (found==1) exit }
       { if (found==1) print }
     ' README.md
   }
@@ -185,9 +231,15 @@ for tag in $tags; do
       echo "[update] $tag (release exists; ensuring asset present)"
     else
       echo "[create] $tag"
-      gh release create "$tag" \
-        --title "$tag" \
+      create_args=(
+        "$tag"
+        --title "$tag"
         --notes-file "$tmpfile"
+      )
+      if [ "$DRAFT" -eq 1 ]; then
+        create_args+=(--draft)
+      fi
+      gh release create "${create_args[@]}"
     fi
 
     # Upload DCTL asset if available and not already present

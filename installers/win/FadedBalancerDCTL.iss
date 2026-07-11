@@ -5,7 +5,7 @@
 
 #define MyAppName "Faded Balancer DCTL"
 #ifndef MyAppVersion
-#define MyAppVersion "1.6.0"
+#define MyAppVersion "1.7.0"
 #endif
 #define MyAppId "{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}"
 #define ResolveLUTPath "Blackmagic Design\DaVinci Resolve\Support\LUT"

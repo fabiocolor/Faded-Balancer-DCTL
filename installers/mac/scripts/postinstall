@@ -79,7 +79,7 @@ else
     echo "Error: Failed to create LUT directory: ${LUT_PATH}" >&2
     exit 1
   fi
-  
+
   # Copy from staging location
   if [ -f "${STAGING}/${DCTL_NAME}" ]; then
     if cp "${STAGING}/${DCTL_NAME}" "${LUT_PATH}/${DCTL_NAME}"; then

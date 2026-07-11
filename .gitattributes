@@ -1,0 +1,14 @@
+* text=auto
+
+*.dctl text eol=lf
+*.html text eol=lf
+*.iss text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.mdc text eol=lf
+*.ps1 text eol=lf
+*.py text eol=lf
+*.sh text eol=lf
+*.xml text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf

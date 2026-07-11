@@ -4,20 +4,23 @@ alwaysApply: true
 ### Faded Balancer DCTL — Project Overview
 
 - **Primary DCTL**: [FadedBalancerDCTL.dctl](mdc:FadedBalancerDCTL.dctl)
-- **Presets**: [presets/presets.json](mdc:presets/presets.json)
+- **Presets**: the embedded preset blocks in [FadedBalancerDCTL.dctl](mdc:FadedBalancerDCTL.dctl); [presets/presets.json](mdc:presets/presets.json) is a deprecation pointer
 - **Documentation**:
   - [README.md](mdc:README.md)
   - [docs/BACKGROUND_FILM_FADING.md](mdc:docs/BACKGROUND_FILM_FADING.md)
   - [docs/FAQ.md](mdc:docs/FAQ.md)
+  - [docs/CHANNEL_RECOVERY.md](mdc:docs/CHANNEL_RECOVERY.md)
   - [docs/presets_companion.md](mdc:docs/presets_companion.md)
   - Internal: [internal/docs/SPECIFICATION.md](mdc:internal/docs/SPECIFICATION.md)
 - **Assets for examples**: before/after images under [assets/before](mdc:assets/before/) and [assets/after](mdc:assets/after/)
 - **Tools**:
   - Validate presets: [tools/validate_presets.py](mdc:tools/validate_presets.py)
+  - Test progressive recovery: [tools/test_range_recovery.py](mdc:tools/test_range_recovery.py)
+  - Test the full numerical pipeline: [tools/test_dctl_pipeline.py](mdc:tools/test_dctl_pipeline.py)
   - Release helper: [tools/create_releases.sh](mdc:tools/create_releases.sh)
 - **Previous versions**: [previous_versions/](mdc:previous_versions/)
 - **Vendor DCTL helpers**: [internal/docs/vendor/DaVinciCTL](mdc:internal/docs/vendor/DaVinciCTL/)
 
 Guidance:
-- When modifying `FadedBalancerDCTL.dctl`, ensure parameter names and defaults stay in sync with `presets/presets.json` and referenced docs.
+- When modifying `FadedBalancerDCTL.dctl`, preserve existing parameter identifiers/enum values and keep the embedded presets and referenced docs synchronized.
 - Keep the README usage section current if UI/parameters change.

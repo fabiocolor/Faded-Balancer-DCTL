@@ -49,6 +49,8 @@ previous_versions/
 # Installer build outputs (upload to GitHub Releases instead)
 installers/*.exe
 installers/*.pkg
+installers/*-macos.zip
+installers/*-win64.zip
 
 # Project-specific ignores
 .cursor/

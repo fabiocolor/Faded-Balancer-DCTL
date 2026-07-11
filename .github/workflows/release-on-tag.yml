@@ -9,31 +9,80 @@ permissions:
   contents: write
 
 jobs:
-  create-release:
+  preflight:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # ensure tags and history for notes/compare
+          fetch-depth: 0
 
-      - name: Create GitHub Release for tag
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install test dependencies
+        run: python -m pip install --disable-pip-version-check numpy
+
+      - name: Verify tag matches the DCTL version
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          expected="// FadedBalancerDCTL v$version"
+          actual="$(head -n 1 FadedBalancerDCTL.dctl)"
+          if [ "$actual" != "$expected" ]; then
+            echo "Expected first DCTL line: $expected" >&2
+            echo "Actual first DCTL line:   $actual" >&2
+            exit 1
+          fi
+
+      - name: Run DCTL numerical tests
+        run: |
+          python tools/test_range_recovery.py
+          python tools/test_dctl_pipeline.py
+
+      - name: Validate embedded presets
+        run: python tools/validate_presets.py presets/presets.json
+
+      - name: Validate release shell scripts
+        run: |
+          bash -n tools/build_mac_installer.sh
+          bash -n tools/create_releases.sh
+          bash -n installers/mac/scripts/preinstall
+          bash -n installers/mac/scripts/postinstall
+
+      - name: Reject whitespace errors
+        run: |
+          previous_tag="$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || true)"
+          if [ -n "$previous_tag" ]; then
+            git diff --check "$previous_tag" HEAD
+          else
+            git diff --check HEAD^ HEAD
+          fi
+
+  create-draft-release:
+    needs: preflight
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create draft release and upload source DCTL
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Ref: $GITHUB_REF"
-          echo "Tag: $GITHUB_REF_NAME"
           chmod +x tools/create_releases.sh
-          ./tools/create_releases.sh
+          ./tools/create_releases.sh --tag "$GITHUB_REF_NAME" --draft
 
-      - name: Upload install guide to release
+      - name: Upload install guide to draft release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release upload "$GITHUB_REF_NAME" docs/INSTALL.md --clobber
+        run: gh release upload "$GITHUB_REF_NAME" docs/INSTALL.md --clobber --repo "$GITHUB_REPOSITORY"
 
   build-win-installer:
-    needs: create-release
+    needs: create-draft-release
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -43,41 +92,55 @@ jobs:
         run: choco install innosetup -y
 
       - name: Build Windows installer
+        shell: pwsh
         run: |
           $tag = "$env:GITHUB_REF_NAME"
           $ver = if ($tag -match '^v(.+)$') { $Matches[1] } else { $tag }
-          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DMyAppVersion=$ver installers\win\FadedBalancerDCTL.iss
-
-          $exe = Get-ChildItem installers\FadedBalancerDCTL-Setup-*.exe | Select-Object -First 1
+          $exe = "installers\FadedBalancerDCTL-Setup-$ver.exe"
           $zip = "installers\FadedBalancerDCTL-Setup-$ver-win64.zip"
-          Compress-Archive -Path $exe.FullName -DestinationPath $zip -Force
-        shell: pwsh
 
-      - name: Upload Windows installer zip to release
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DMyAppVersion=$ver installers\win\FadedBalancerDCTL.iss
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed with exit code $LASTEXITCODE." }
+          if (-not (Test-Path -LiteralPath $exe -PathType Leaf)) { throw "Expected installer not found: $exe" }
+
+          Compress-Archive -LiteralPath $exe -DestinationPath $zip -Force
+          if (-not (Test-Path -LiteralPath $zip -PathType Leaf)) { throw "Expected installer ZIP not found: $zip" }
+
+      - name: Upload Windows installer assets to draft release
+        shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          $asset = (Get-ChildItem installers\FadedBalancerDCTL-Setup-*-win64.zip | Select-Object -First 1).FullName
-          if (-not $asset) { throw "Windows installer zip not found." }
-          for ($i=1; $i -le 5; $i++) {
-            gh release upload "$env:GITHUB_REF_NAME" "$asset" --clobber -R "$env:GITHUB_REPOSITORY"
-            if ($LASTEXITCODE -eq 0) { break }
-            if ($i -eq 5) { throw "Failed to upload Windows installer zip after retries." }
-            Start-Sleep -Seconds 5
+          $tag = "$env:GITHUB_REF_NAME"
+          $ver = if ($tag -match '^v(.+)$') { $Matches[1] } else { $tag }
+          $assets = @(
+            "installers\FadedBalancerDCTL-Setup-$ver.exe",
+            "installers\FadedBalancerDCTL-Setup-$ver-win64.zip"
+          )
+
+          foreach ($asset in $assets) {
+            if (-not (Test-Path -LiteralPath $asset -PathType Leaf)) { throw "Release asset not found: $asset" }
+            for ($attempt = 1; $attempt -le 5; $attempt++) {
+              gh release upload $tag $asset --clobber --repo $env:GITHUB_REPOSITORY
+              if ($LASTEXITCODE -eq 0) { break }
+              if ($attempt -eq 5) { throw "Failed to upload $asset after five attempts." }
+              Start-Sleep -Seconds 5
+            }
           }
-        shell: pwsh
 
       - name: Build internal Windows security metadata
         shell: pwsh
         run: |
+          $tag = "$env:GITHUB_REF_NAME"
+          $ver = if ($tag -match '^v(.+)$') { $Matches[1] } else { $tag }
           New-Item -ItemType Directory -Force -Path internal-security/windows | Out-Null
-          Copy-Item -Force installers\FadedBalancerDCTL-Setup-*-win64.zip internal-security/windows/
-          $files = Get-ChildItem internal-security/windows -File
-          $lines = foreach ($file in $files) {
-            $hash = (Get-FileHash -Path $file.FullName -Algorithm SHA256).Hash.ToLower()
-            "$hash *$($file.Name)"
+          Copy-Item -LiteralPath "installers\FadedBalancerDCTL-Setup-$ver.exe" -Destination internal-security/windows/
+          Copy-Item -LiteralPath "installers\FadedBalancerDCTL-Setup-$ver-win64.zip" -Destination internal-security/windows/
+          $lines = Get-ChildItem internal-security/windows -File | Sort-Object Name | ForEach-Object {
+            $hash = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLower()
+            "$hash *$($_.Name)"
           }
-          Set-Content -Path internal-security/windows/SHA256SUMS.txt -Value $lines
+          Set-Content -Path internal-security/windows/SHA256SUMS.txt -Value $lines -Encoding ascii
 
       - name: Upload internal Windows security artifact
         uses: actions/upload-artifact@v4
@@ -86,32 +149,57 @@ jobs:
           path: internal-security/windows/*
 
   build-mac-installer:
-    needs: create-release
+    needs: create-draft-release
     runs-on: macos-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build macOS installer
+      - name: Build and verify macOS installer
         run: |
           tag="$GITHUB_REF_NAME"
           ver="${tag#v}"
-          ./tools/build_mac_installer.sh "$ver"
-          ditto -c -k --sequesterRsrc --keepParent "installers/FadedBalancerDCTL-$ver.pkg" "installers/FadedBalancerDCTL-$ver-macos.zip"
+          pkg="installers/FadedBalancerDCTL-$ver.pkg"
+          zip="installers/FadedBalancerDCTL-$ver-macos.zip"
 
-      - name: Upload macOS installer zip to release
+          ./tools/build_mac_installer.sh "$ver"
+          test -f "$pkg"
+          payload_list="$(pkgutil --payload-files "$pkg")"
+          test "$(printf '%s\n' "$payload_list" | grep -Fxc './FadedBalancerDCTL.dctl')" -eq 1
+          if printf '%s\n' "$payload_list" | grep -q '/\._'; then
+            echo "AppleDouble metadata found in package payload." >&2
+            exit 1
+          fi
+
+          expanded="$(mktemp -d)"
+          trap 'rm -rf "$expanded"' EXIT
+          pkgutil --expand-full "$pkg" "$expanded/package"
+          packaged_dctl="$(find "$expanded/package" -type f -name FadedBalancerDCTL.dctl -print -quit)"
+          test -n "$packaged_dctl"
+          cmp FadedBalancerDCTL.dctl "$packaged_dctl"
+
+          COPYFILE_DISABLE=1 ditto -c -k --norsrc --noqtn --keepParent "$pkg" "$zip"
+          test -f "$zip"
+
+      - name: Upload macOS installer assets to draft release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload "$GITHUB_REF_NAME" installers/FadedBalancerDCTL-*-macos.zip --clobber
+          ver="${GITHUB_REF_NAME#v}"
+          gh release upload "$GITHUB_REF_NAME" \
+            "installers/FadedBalancerDCTL-$ver.pkg" \
+            "installers/FadedBalancerDCTL-$ver-macos.zip" \
+            --clobber --repo "$GITHUB_REPOSITORY"
 
       - name: Build internal macOS security metadata
         run: |
+          ver="${GITHUB_REF_NAME#v}"
           mkdir -p internal-security/macos
-          cp installers/FadedBalancerDCTL-*-macos.zip internal-security/macos/
+          cp "installers/FadedBalancerDCTL-$ver.pkg" internal-security/macos/
+          cp "installers/FadedBalancerDCTL-$ver-macos.zip" internal-security/macos/
           (
             cd internal-security/macos
-            shasum -a 256 * > SHA256SUMS.txt
+            shasum -a 256 FadedBalancerDCTL-* > SHA256SUMS.txt
           )
 
       - name: Upload internal macOS security artifact
@@ -119,3 +207,32 @@ jobs:
         with:
           name: internal-security-macos
           path: internal-security/macos/*
+
+  publish-release:
+    needs:
+      - create-draft-release
+      - build-win-installer
+      - build-mac-installer
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish complete release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ver="${GITHUB_REF_NAME#v}"
+          required_assets=(
+            FadedBalancerDCTL.dctl
+            INSTALL.md
+            "FadedBalancerDCTL-Setup-$ver.exe"
+            "FadedBalancerDCTL-Setup-$ver-win64.zip"
+            "FadedBalancerDCTL-$ver.pkg"
+            "FadedBalancerDCTL-$ver-macos.zip"
+          )
+          uploaded_assets="$(gh release view "$GITHUB_REF_NAME" --json assets --jq '.assets[].name' --repo "$GITHUB_REPOSITORY")"
+          for asset in "${required_assets[@]}"; do
+            if ! grep -Fqx "$asset" <<< "$uploaded_assets"; then
+              echo "Required release asset is missing: $asset" >&2
+              exit 1
+            fi
+          done
+          gh release edit "$GITHUB_REF_NAME" --draft=false --repo "$GITHUB_REPOSITORY"
