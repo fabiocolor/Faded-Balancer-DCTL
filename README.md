@@ -229,3 +229,5 @@ The implementation here is a lightweight deterministic grading curve; it does no
 ### License
 
 [MIT License](LICENSE)
+
+Checks run locally: `bash scripts/check.sh`. Releases are built locally; the former GitHub Actions release workflows are kept for reference in `.ci-archive/github-actions/` (not run).
